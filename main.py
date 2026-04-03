@@ -336,19 +336,12 @@ def update_trending_scores():
     conn.close()
 
 # ─── APP STARTUP ──────────────────────────────────────────────────────────────
+# --- Find the Startup Section ---
 scheduler = AsyncIOScheduler()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    init_db()
-    # On first start, collect news immediately in background
-    asyncio.create_task(collect_news())
-    scheduler.add_job(collect_news, "interval", minutes=30, id="collect")
-    scheduler.add_job(update_trending_scores, "interval", hours=2, id="trending")
-    scheduler.start()
-    log.info("Scheduler started: collect=30m, trending=2h")
-    yield
-    scheduler.shutdown()
+    # ... (existing code) ...
 
 app = FastAPI(
     title="SherByte API",
@@ -359,12 +352,11 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Tighten in production
+    allow_origins=["https://sherrbyte.web.app", "https://sherrbyte.firebaseapp.com"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 # ─── PYDANTIC MODELS ──────────────────────────────────────────────────────────
 class RegisterRequest(BaseModel):
     email: str
