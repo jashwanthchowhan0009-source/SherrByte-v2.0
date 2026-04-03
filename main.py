@@ -277,11 +277,23 @@ async def gemini_rewrite(title: str, body: str, category: str):
         model = genai.GenerativeModel("gemini-1.5-flash")
         prompt = f"""You are an AI news editor. Rewrite this article clearly and neutrally.
 
-Title: {title}
-Body: {body[:800]}
-Category: {category}
+# --- Find this around Line 261 ---
+app = FastAPI(
+    title="SherByte API",
+    version="2.0.0",
+    description="AI-powered personalised news",
+    lifespan=lifespan,
+)
 
-Respond ONLY with valid JSON, no markdown, no explanation:
+# --- PASTE THE CODE HERE ---
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://sherrbyte.web.app", "https://sherrbyte.firebaseapp.com"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 {{
   "preview": "60-word engaging summary",
   "body_ai": "150-180 word plain-language rewrite of the article",
