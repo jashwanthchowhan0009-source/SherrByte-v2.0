@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>SherrByte</title>
-<link rel="icon" type="image/jpeg" href="C:\Users\jashw\OneDrive\Desktop\file\thewhitetigerdotin_logo.jpg">
+<link rel="icon" type="image/jpeg" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1796,9 +1796,35 @@ nav.hidden { transform: translateX(-50%) translateY(110px); opacity: 0; pointer-
 
 <script>
 /* ══════════════════════════════════════════
-   SHERBYTE v20 — JS
+   SHERBYTE v21 — LIVE BACKEND JS
+   Change API_URL to your backend address
 ══════════════════════════════════════════ */
 
+// ── CONFIG ──────────────────────────────────────────────────────────────
+const API_URL = "http://localhost:8000"; // ← change to Railway URL when deployed
+
+// ── STATE ──
+let ST = { likes:[], saves:[], token:null, userId:null, interests:{} };
+try {
+  const saved = JSON.parse(localStorage.getItem('sb21') || '{}');
+  ST = Object.assign({ likes:[], saves:[], token:null, userId:null, interests:{} }, saved);
+} catch(e){}
+
+const persist = () => { try { localStorage.setItem('sb21', JSON.stringify(ST)); } catch(e){} };
+
+// ── API HELPER ──
+async function api(path, opts = {}) {
+  const headers = { "Content-Type": "application/json" };
+  if (ST.token) headers["Authorization"] = "Bearer " + ST.token;
+  const res = await fetch(API_URL + path, { ...opts, headers });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || "HTTP " + res.status);
+  }
+  return res.json();
+}
+
+// ── CATEGORY CONFIG ──
 const CATS = {
   arts:    { hex:'#FF5B5B', bg:'rgba(255,91,91,0.12)',    label:'Arts, Culture & Recreation', icon:'🎭', short:'Arts' },
   selfwell:{ hex:'#FF8C42', bg:'rgba(255,140,66,0.12)',   label:'The Self & Well-being',       icon:'🧘', short:'Well-being' },
@@ -1809,58 +1835,36 @@ const CATS = {
   philo:   { hex:'#A855F7', bg:'rgba(168,85,247,0.12)',   label:'Philosophy & Ideas',          icon:'🔮', short:'Philosophy' },
 };
 
-const img = (q, s=1) => `https://picsum.photos/seed/${s}/400/280`;
-
-const articles = [
-  {id:1,  cat:'tech',    breaking:true, src:'The Wire Science', time:'2h',  title:'India\'s quantum leap: IIT Delhi achieves 127-qubit milestone, enters global race', text:'In a landmark achievement for Indian science, researchers at IIT Delhi have demonstrated a 127-qubit quantum processor capable of running error-corrected algorithms at room temperature.',img:img('quantum,india',1)},
-  {id:2,  cat:'arts',    breaking:true, src:'The Hindu Arts',   time:'3h',  title:'Anurag Kashyap\'s new film premieres at Cannes to standing ovation', text:'The veteran filmmaker returns to his roots with a sweeping three-hour epic set against the backdrop of 1984 Punjab, drawing comparisons to the masterworks of Satyajit Ray.',img:img('film,bollywood',2)},
-  {id:3,  cat:'selfwell',breaking:true, src:'TOI Wellness',     time:'4h',  title:'AIIMS Delhi study: Daily 20-minute walk reduces dementia risk by 40%', text:'A landmark five-year study tracking 12,000 Indians aged 50+ has found that moderate daily exercise dramatically reduces the risk of cognitive decline.',img:img('health,walking',3)},
-  {id:4,  cat:'economy', breaking:true, src:'Mint',             time:'5h',  title:'India\'s GDP growth hits 8.4% — fastest among G20 nations for third consecutive quarter', text:'The latest National Statistical Office data confirms India\'s position as the world\'s fastest-growing major economy, driven by manufacturing and digital services.',img:img('economy,india',4)},
-  {id:5,  cat:'nature',  src:'Down to Earth',   time:'6h',  title:'Western Ghats tiger corridor restored after 30 years of fragmentation', text:'A decade-long effort by forest departments across Karnataka, Kerala, and Tamil Nadu has successfully reconnected two major tiger habitats.',img:img('tiger,forest',5)},
-  {id:6,  cat:'society', src:'The Hindu',       time:'7h',  title:'Supreme Court mandates free wifi in all government schools by 2026', text:'In a historic ruling, the Supreme Court has directed the Union government to ensure high-speed internet connectivity in all 1.4 million government schools.',img:img('school,india',6)},
-  {id:7,  cat:'philo',   src:'Aeon India',      time:'8h',  title:'The paradox of choice: Why more options make us less happy', text:'Philosopher Barry Schwartz\'s ideas about decision paralysis take on new meaning in the age of infinite streaming, infinite scroll, and infinite possibilities.',img:img('philosophy,meditation',7)},
-  {id:8,  cat:'tech',    src:'ET Tech',         time:'9h',  title:'Jio launches AI-powered vernacular news aggregator — 22 languages', text:'Reliance Jio has unveiled a revolutionary news platform that uses AI to translate, summarize, and curate news content across all 22 official Indian languages.',img:img('technology,ai',8)},
-  {id:9,  cat:'arts',    src:'Firstpost',       time:'10h', title:'The resurgence of Indian classical music among Gen Z', text:'Streaming data reveals a surprising trend: classical ragas are among the fastest-growing content categories for listeners aged 18-24.',img:img('music,india',9)},
-  {id:10, cat:'selfwell',src:'NDTV Health',     time:'11h', title:'Yoga nidra: The ancient practice being adopted by NASA astronauts', text:'The Indian sleep meditation technique is being studied by NASA for its potential to help astronauts maintain mental health during long-duration space missions.',img:img('yoga,meditation',10)},
-  {id:11, cat:'economy', src:'Business Today',  time:'12h', title:'Electric vehicle sales overtake petrol cars in India for first time', text:'March 2026 marked a watershed moment for India\'s automotive industry: EV sales surpassed internal combustion engine vehicles for the first time.',img:img('electric,car',11)},
-  {id:12, cat:'nature',  src:'Mongabay India',  time:'14h', title:'Gangetic dolphin population rebounds by 35% after decade of conservation', text:'The national aquatic animal of India, once critically endangered, has shown remarkable recovery following riverside cleanup and fishing regulation.',img:img('dolphin,river',12)},
-  {id:13, cat:'society', src:'Indian Express',  time:'15h', title:'India\'s urban farming revolution: Rooftop gardens feed a million families', text:'A comprehensive survey reveals that urban farming initiatives have expanded dramatically across 50 Indian cities, reducing food costs and carbon footprints.',img:img('farm,urban',13)},
-  {id:14, cat:'philo',   src:'Scroll.in',       time:'16h', title:'Can AI have consciousness? Indian philosophers offer ancient answers to modern questions', text:'The Advaita Vedanta concept of universal consciousness offers a unique lens through which to examine questions about artificial sentience.',img:img('ai,philosophy',14)},
-  {id:15, cat:'tech',    src:'MediaNama',       time:'18h', title:'India Digital Personal Data Protection Act: Six months on', text:'An assessment of how India\'s landmark data privacy legislation is being implemented, with reports of both compliance successes and significant gaps.',img:img('data,privacy',15)},
-  {id:16, cat:'arts',    src:'Art India',       time:'20h', title:'Martand Singh: The textile revivalist who saved India\'s forgotten fabrics', text:'A documentary retrospective on the life of Martand Singh, whose tireless work across four decades preserved over 300 endangered Indian textile traditions.',img:img('textile,art',16)},
-  {id:17, cat:'selfwell',src:'Live Mint',       time:'22h', title:'Financial wellness: Why India\'s middle class is increasingly seeing money as a mental health issue', text:'A new survey reveals that 67% of Indians aged 25-40 report that financial stress significantly impacts their mental health and relationships.',img:img('finance,stress',17)},
-  {id:18, cat:'economy', src:'Financial Express',time:'1d', title:'Made in India chips: TATA Semiconductor opens Dholera fab ahead of schedule', text:'Tata\'s first semiconductor fabrication plant has begun test production of 28nm chips, a major milestone for India\'s electronics manufacturing ambitions.',img:img('semiconductor,chip',18)},
-  {id:19, cat:'nature',  src:'WWF India',       time:'1d', title:'India\'s coral reefs: Lakshadweep bleaching raises alarm amid record sea temperatures', text:'Marine biologists warn that over 40% of Lakshadweep\'s coral reefs are showing signs of stress bleaching as sea surface temperatures hit 31°C.',img:img('coral,ocean',19)},
-  {id:20, cat:'society', src:'Wire',            time:'1d', title:'The gig economy trap: How platform workers are building India\'s new underclass', text:'An investigative report into the working conditions of India\'s 15 million gig workers, from food delivery to domestic services.',img:img('workers,india',20)},
+// Fallback articles shown before backend loads or if offline
+const FALLBACK_ARTICLES = [
+  {id:'f1', category:'tech',    source:'SherByte',  title:'Loading your personalised feed...', preview:'Connecting to the live news pipeline. Please wait a moment.', image_url:'', published_at: new Date().toISOString() },
+  {id:'f2', category:'society', source:'SherByte',  title:'Real AI-rewritten news is loading',  preview:'Articles are being fetched from 10+ sources and rewritten by Gemini AI.', image_url:'', published_at: new Date().toISOString() },
 ];
 
-const notifData = [
-  { img:img('space,india',21), title:'ISRO launches crew module — India becomes 4th nation to send humans to space', time:'2 min' },
-  { img:img('economy,india',22), title:'India surpasses Germany — officially world\'s third largest economy', time:'15 min' },
-  { img:img('tiger,india',23), title:'Tiger population hits 3,682 — a 60% increase since Project Tiger began', time:'1 hr' },
-  { img:img('ai,india',24), title:'IIT Bombay diabetes drug shows 90% success rate in Phase 3 trial', time:'2 hr' },
-];
-
-// ── STATE ──
-let ST = { likes:[], saves:[] };
-try { ST = JSON.parse(localStorage.getItem('sb20')||'{"likes":[],"saves":[]}'); } catch(e){}
-const save = () => { try { localStorage.setItem('sb20', JSON.stringify(ST)); } catch(e){} };
-let isDark = true, curChip = 'all', homeIdx = 0, expIdx = 0;
-let currentArticle = null;
-let activeFeedCats = new Set(['arts','selfwell','economy','nature','society','tech','philo']);
-let activeFeedTopics = new Set(['AI','Climate','Politics','Finance','Sports','Science']);
-let quizAnswered = false;
-const nav = document.querySelector('nav');
+// ── NAVIGATION STATE ──
+const navEl   = document.querySelector('nav');
 let lastScrollY = 0;
+let curChip     = 'all';
+let isDark      = true;
+let feedPage    = 1;
+let feedLoading = false;
+let homeArticles= [];
+let currentArticle = null;
+let expHeroTimer = null;
+let expHeroIdx = 0;
+let expHeroArts = [];
+let activeFeedCats   = new Set(['arts','selfwell','economy','nature','society','tech','philo']);
+let activeFeedTopics = new Set(['AI','Climate','Politics','Finance','Sports']);
+let quizAnswered = false;
 
 // ── TOAST ──
-let toastT;
+let toastTimer;
 function toast(msg) {
-  clearTimeout(toastT);
+  clearTimeout(toastTimer);
   const el = document.getElementById('toast');
   el.textContent = msg;
   el.classList.add('show');
-  toastT = setTimeout(() => el.classList.remove('show'), 2600);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
 }
 
 // ── THEME ──
@@ -1870,66 +1874,374 @@ function toggleTheme() {
 }
 
 // ── SIDEBAR ──
-function sbOpen() { document.getElementById('sidebar').classList.add('on'); document.getElementById('overlay').classList.add('on'); }
+function sbOpen()  { document.getElementById('sidebar').classList.add('on');  document.getElementById('overlay').classList.add('on'); }
 function sbClose() { document.getElementById('sidebar').classList.remove('on'); document.getElementById('overlay').classList.remove('on'); }
 
 // ── SUB PAGES ──
 function openSub(id) { sbClose(); document.getElementById('sub-'+id)?.classList.add('on'); }
 function closeSub(id) { document.getElementById('sub-'+id)?.classList.remove('on'); }
-function togRow(el) { el.classList.toggle('on'); toast(el.classList.contains('on') ? '✓ Enabled' : '✗ Disabled'); }
-function selPriv(el) { el.closest('.priv-level').querySelectorAll('.pl').forEach(p=>p.classList.remove('on')); el.classList.add('on'); toast('🔒 Visibility: '+el.textContent.trim()); }
+function togRow(el)  { el.classList.toggle('on'); toast(el.classList.contains('on') ? '✓ Enabled' : '✗ Disabled'); }
+function selPriv(el) {
+  el.closest('.priv-level').querySelectorAll('.pl').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+  toast('🔒 Visibility: '+el.textContent.trim());
+}
+
+// ── SHARE ──
+function shareArt(title) {
+  if (navigator.share) navigator.share({ title:'SherByte: '+title, url:location.href }).catch(()=>{});
+  else { navigator.clipboard?.writeText(title).catch(()=>{}); toast('📋 Copied to clipboard'); }
+}
+
+// ── LANGUAGE PICKER ──
+let currentLang = 'English';
+function toggleLangPicker() { document.getElementById('lang-picker').classList.toggle('open'); }
+function setLang(lang, flag) {
+  currentLang = lang;
+  document.querySelectorAll('.lang-item').forEach(el => {
+    el.classList.remove('active');
+    if (el.textContent.trim().includes(lang)) el.classList.add('active');
+  });
+  document.getElementById('lang-picker').classList.remove('open');
+  toast(flag + ' Language: ' + lang);
+}
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#lang-picker') && !e.target.closest('#lang-btn'))
+    document.getElementById('lang-picker')?.classList.remove('open');
+});
 
 // ── CHIP ──
 function selectChip(el, cat) {
   document.querySelectorAll('.chip').forEach(c => { c.classList.remove('on'); c.style.background=''; });
   el.classList.add('on');
-  const catObj = CATS[cat];
-  el.style.background = catObj ? catObj.hex : 'var(--p-blue)';
+  const cc = CATS[cat];
+  el.style.background = cc ? cc.hex : 'var(--p-blue)';
   curChip = cat;
+  feedPage = 1;
+  homeArticles = [];
   document.getElementById('home-feed').innerHTML = '';
-  homeIdx = 0;
-  renderHome(8);
+  loadFeed(true);
+}
+
+// ── SCOPE TOGGLE ──
+function selScope(btn, scope) {
+  btn.closest('.scope-toggle').querySelectorAll('.scope-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  toast('📍 ' + scope.charAt(0).toUpperCase() + scope.slice(1) + ' stories');
+}
+
+// ── AUTH MODAL ──
+function showAuthModal() {
+  // Create a simple modal overlay for login/register
+  const existing = document.getElementById('auth-modal');
+  if (existing) { existing.style.display='flex'; return; }
+
+  const modal = document.createElement('div');
+  modal.id = 'auth-modal';
+  modal.style.cssText = `
+    position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.8);
+    display:flex;align-items:center;justify-content:center;padding:20px;
+    backdrop-filter:blur(8px);
+  `;
+  modal.innerHTML = `
+    <div style="background:var(--bg1);border-radius:24px;padding:24px;width:100%;max-width:340px;border:1px solid var(--line);box-shadow:0 20px 60px rgba(0,0,0,0.5)">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+        <div style="width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,#1A111F,#2C3D8F,#4F6BD4);display:flex;align-items:center;justify-content:center;font-size:1.2rem">⚡</div>
+        <div style="font-family:var(--fd);font-size:1.1rem;font-weight:700;color:var(--t1)">SherByte</div>
+        <div style="margin-left:auto;cursor:pointer;color:var(--t3);font-size:1.2rem" onclick="document.getElementById('auth-modal').style.display='none'">✕</div>
+      </div>
+
+      <div style="display:flex;background:var(--bg2);border-radius:12px;padding:3px;margin-bottom:16px;border:1px solid var(--line2)" id="auth-tabs">
+        <div onclick="authTab('login')" id="tab-login"
+          style="flex:1;text-align:center;padding:7px;border-radius:10px;font-size:0.8rem;font-weight:700;cursor:pointer;background:var(--bg4);color:var(--t1)">
+          Sign In
+        </div>
+        <div onclick="authTab('register')" id="tab-register"
+          style="flex:1;text-align:center;padding:7px;border-radius:10px;font-size:0.8rem;font-weight:700;cursor:pointer;color:var(--t3)">
+          Register
+        </div>
+      </div>
+
+      <div id="auth-error" style="display:none;background:rgba(255,91,91,0.1);border:1px solid rgba(255,91,91,0.3);border-radius:10px;padding:8px 12px;margin-bottom:12px;font-size:0.76rem;color:#FF5B5B"></div>
+
+      <input id="auth-name" type="text" placeholder="Display name (optional)"
+        style="display:none;width:100%;padding:10px 14px;margin-bottom:10px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;color:var(--t1);font-size:0.84rem;font-family:var(--f);outline:none">
+
+      <input id="auth-email" type="email" placeholder="Email address"
+        style="width:100%;padding:10px 14px;margin-bottom:10px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;color:var(--t1);font-size:0.84rem;font-family:var(--f);outline:none">
+
+      <input id="auth-pass" type="password" placeholder="Password"
+        style="width:100%;padding:10px 14px;margin-bottom:16px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;color:var(--t1);font-size:0.84rem;font-family:var(--f);outline:none">
+
+      <button onclick="doAuth()" id="auth-btn"
+        style="width:100%;padding:11px;background:linear-gradient(135deg,var(--p-blue),var(--p-blue3));color:#fff;border:none;border-radius:12px;font-size:0.88rem;font-weight:700;cursor:pointer;font-family:var(--f);box-shadow:0 4px 16px rgba(44,61,143,0.4)">
+        Sign In
+      </button>
+
+      <div style="text-align:center;margin-top:12px;font-size:0.72rem;color:var(--t3)">
+        Your feed personalises as you read. No tracking outside the app.
+      </div>
+    </div>`;
+  document.querySelector('.phone').appendChild(modal);
+}
+
+let authMode = 'login';
+function authTab(mode) {
+  authMode = mode;
+  document.getElementById('tab-login').style.background    = mode==='login'    ? 'var(--bg4)' : 'transparent';
+  document.getElementById('tab-login').style.color         = mode==='login'    ? 'var(--t1)'  : 'var(--t3)';
+  document.getElementById('tab-register').style.background = mode==='register' ? 'var(--bg4)' : 'transparent';
+  document.getElementById('tab-register').style.color      = mode==='register' ? 'var(--t1)'  : 'var(--t3)';
+  document.getElementById('auth-name').style.display       = mode==='register' ? 'block' : 'none';
+  document.getElementById('auth-btn').textContent          = mode==='login'    ? 'Sign In' : 'Create Account';
+  document.getElementById('auth-error').style.display      = 'none';
+}
+
+async function doAuth() {
+  const email = document.getElementById('auth-email').value.trim();
+  const pass  = document.getElementById('auth-pass').value;
+  const name  = document.getElementById('auth-name').value.trim();
+  const errEl = document.getElementById('auth-error');
+  const btn   = document.getElementById('auth-btn');
+
+  if (!email || !pass) { errEl.textContent='Enter email and password'; errEl.style.display='block'; return; }
+
+  btn.textContent = '...';
+  btn.disabled = true;
+  try {
+    let data;
+    if (authMode === 'login') {
+      data = await api('/auth/login', { method:'POST', body: JSON.stringify({ email, password: pass }) });
+    } else {
+      data = await api('/auth/register', { method:'POST', body: JSON.stringify({ email, password: pass, display_name: name || undefined }) });
+    }
+    ST.token  = data.token;
+    ST.userId = data.user_id;
+    persist();
+    document.getElementById('auth-modal').style.display = 'none';
+    toast('✦ Signed in! Your feed is personalising...');
+    loadFeed(true);
+    updateProfileUI(data);
+  } catch(e) {
+    errEl.textContent = e.message;
+    errEl.style.display = 'block';
+  } finally {
+    btn.textContent = authMode === 'login' ? 'Sign In' : 'Create Account';
+    btn.disabled = false;
+  }
+}
+
+function signOut() {
+  ST.token = null; ST.userId = null;
+  persist();
+  sbClose();
+  toast('👋 Signed out');
+  loadFeed(true);
+}
+
+function updateProfileUI(data) {
+  if (!data) return;
+  const nameEl = document.querySelector('.prof-name');
+  const sbNameEl = document.querySelector('.sb-name');
+  if (nameEl && data.display_name) nameEl.textContent = data.display_name;
+  if (sbNameEl && data.display_name) sbNameEl.textContent = data.display_name;
+}
+
+// ── ARTICLE CARD RENDER ──
+function renderArticleCard(a, container) {
+  const cc  = CATS[a.category] || CATS.tech;
+  const liked = ST.likes.includes(a.id);
+  const saved = ST.saves.includes(a.id);
+  const timeStr = timeAgo(a.published_at);
+
+  const d = document.createElement('div');
+  d.className = 'nc fadein';
+  d.dataset.id = a.id;
+
+  let clickTimer = null;
+  d.addEventListener('click', (e) => {
+    if (e.target.closest('.nc-act')) return;
+    if (clickTimer) {
+      clearTimeout(clickTimer); clickTimer = null;
+      openArticle(a);
+    } else {
+      clickTimer = setTimeout(() => {
+        clickTimer = null;
+        d.classList.toggle('expanded');
+      }, 240);
+    }
+  });
+
+  d.innerHTML = `
+    <div class="nc-meta">
+      <div class="nc-src-ico">${(a.source||'S').charAt(0)}</div>
+      <span class="nc-src">${a.source||''}</span>
+      <span class="nc-time">${timeStr ? '· '+timeStr : ''}</span>
+      <span class="nc-tag" style="background:${cc.bg};color:${cc.hex}">${cc.icon} ${cc.short}</span>
+    </div>
+    <div class="nc-body">
+      <div class="nc-text">
+        <div class="nc-title">${a.title}</div>
+        <div class="nc-desc">${a.preview||a.body_ai||''}</div>
+        <div class="nc-expand-extra">${a.body_ai||a.preview||''}<br><br><span style="color:var(--accent);font-weight:600;font-size:0.74rem">Double-tap to read full article →</span></div>
+        <div class="nc-tap-hint">Tap to expand · Double-tap for full</div>
+      </div>
+      ${a.image_url ? `<img class="nc-img" src="${a.image_url}" loading="lazy" alt="" onerror="this.style.display='none'">` : ''}
+    </div>
+    <div class="nc-acts">
+      <div class="nc-act tap ${liked?'red':''}" id="lk-${a.id}" onclick="toggleLike('${a.id}','${a.category}',this)">
+        <i class="fa-${liked?'solid':'regular'} fa-heart"></i>
+      </div>
+      <div class="nc-act tap ${saved?'acc':''}" id="sv-${a.id}" onclick="toggleSave('${a.id}','${a.category}',this)">
+        <i class="fa-${saved?'solid':'regular'} fa-bookmark"></i>
+      </div>
+      <div class="nc-act tap" onclick="shareArt('${(a.title||'').replace(/'/g,"\\'")}')">
+        <i class="fa-solid fa-paper-plane"></i>
+      </div>
+      <div class="nc-sp"></div>
+      <div class="nc-act tap" style="color:var(--accent);font-size:0.7rem;font-weight:700" onclick='openArticle(${JSON.stringify(a).replace(/'/g,"&#39;")})'>
+        Read <i class="fa-solid fa-arrow-right" style="font-size:0.65rem"></i>
+      </div>
+    </div>`;
+
+  // Log 'read' when card scrolls into view
+  const observer = new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting) {
+      logInteract(a.id, a.category, 'read');
+      observer.disconnect();
+    }
+  }, { threshold: 0.6 });
+  observer.observe(d);
+
+  container.appendChild(d);
+}
+
+// ── LOAD FEED ──
+async function loadFeed(reset = false) {
+  if (feedLoading) return;
+  if (reset) { feedPage=1; homeArticles=[]; document.getElementById('home-feed').innerHTML=''; }
+  feedLoading = true;
+
+  const loadEl = document.createElement('div');
+  loadEl.id = 'feed-loader';
+  loadEl.style.cssText = 'text-align:center;padding:20px;color:var(--t3);font-size:0.8rem';
+  loadEl.textContent = '⚡ Loading...';
+  document.getElementById('home-feed').appendChild(loadEl);
+
+  try {
+    const url = curChip === 'all'
+      ? `/feed?page=${feedPage}`
+      : `/explore?category=${curChip}&page=${feedPage}`;
+    const data = await api(url);
+    const articles = data.articles || [];
+
+    document.getElementById('feed-loader')?.remove();
+    const c = document.getElementById('home-feed');
+
+    if (articles.length === 0 && feedPage === 1) {
+      // Backend has no articles yet — show fallback
+      FALLBACK_ARTICLES.forEach(a => renderArticleCard(a, c));
+      return;
+    }
+
+    articles.forEach(a => renderArticleCard(a, c));
+    if (data.has_more) feedPage++;
+    homeArticles = homeArticles.concat(articles);
+
+    // Also update explore grid with live data
+    if (feedPage === 2) updateExpGrid(articles.slice(0,14));
+
+  } catch(e) {
+    document.getElementById('feed-loader')?.remove();
+    const c = document.getElementById('home-feed');
+    if (c.children.length === 0) {
+      FALLBACK_ARTICLES.forEach(a => renderArticleCard(a, c));
+    }
+    // If backend is not reachable, show a notice
+    const notice = document.createElement('div');
+    notice.style.cssText = 'text-align:center;color:var(--t3);padding:12px;font-size:0.76rem;opacity:0.7';
+    notice.textContent = '⚠️ Backend offline. Start main.py to load live news.';
+    c.appendChild(notice);
+  } finally {
+    feedLoading = false;
+  }
 }
 
 // ── LIKE / SAVE ──
-function toggleLike(id, el) {
+function toggleLike(id, category, el) {
   const i = ST.likes.indexOf(id);
-  if (i===-1) { ST.likes.push(id); el.classList.add('red'); el.querySelector('i').className='fa-solid fa-heart'; }
-  else { ST.likes.splice(i,1); el.classList.remove('red'); el.querySelector('i').className='fa-regular fa-heart'; }
-  el.style.animation = 'heartPop 0.35s forwards';
-  el.addEventListener('animationend', ()=>el.style.animation='',{once:true});
-  save();
+  if (i===-1) {
+    ST.likes.push(id);
+    el.classList.add('red');
+    el.querySelector('i').className='fa-solid fa-heart';
+    logInteract(id, category, 'like');
+  } else {
+    ST.likes.splice(i,1);
+    el.classList.remove('red');
+    el.querySelector('i').className='fa-regular fa-heart';
+  }
+  el.style.animation='heartPop 0.35s forwards';
+  el.addEventListener('animationend',()=>el.style.animation='',{once:true});
+  persist();
 }
-function toggleSave(id, el) {
+
+function toggleSave(id, category, el) {
   const i = ST.saves.indexOf(id);
-  if (i===-1) { ST.saves.push(id); el.classList.add('acc'); toast('🔖 Saved!'); }
-  else { ST.saves.splice(i,1); el.classList.remove('acc'); toast('✓ Removed'); }
-  el.style.animation = 'heartPop 0.3s forwards';
-  el.addEventListener('animationend', ()=>el.style.animation='',{once:true});
-  save();
+  if (i===-1) {
+    ST.saves.push(id);
+    el.classList.add('acc');
+    el.querySelector('i').className='fa-solid fa-bookmark';
+    toast('🔖 Saved!');
+    logInteract(id, category, 'save');
+  } else {
+    ST.saves.splice(i,1);
+    el.classList.remove('acc');
+    el.querySelector('i').className='fa-regular fa-bookmark';
+    toast('✓ Removed');
+  }
+  el.style.animation='heartPop 0.3s forwards';
+  el.addEventListener('animationend',()=>el.style.animation='',{once:true});
+  persist();
   const sc = document.getElementById('saved-ct');
   if (sc) sc.textContent = ST.saves.length;
 }
 
-// ── ARTICLE EXPAND ──
-function openArticle(articleId) {
-  const a = articles.find(x => x.id === articleId);
-  if (!a) return;
-  currentArticle = a;
-  const cc = CATS[a.cat];
-  document.getElementById('ao-img').src = a.img;
-  document.getElementById('ao-title-hdr').textContent = a.title;
-  document.getElementById('ao-cat-pill').style.color = cc.hex;
-  document.getElementById('ao-cat-pill').textContent = cc.label;
-  document.getElementById('ao-src-dot').textContent = a.src.charAt(0).toUpperCase();
-  document.getElementById('ao-src-dot').style.background = cc.bg;
-  document.getElementById('ao-src-dot').style.color = cc.hex;
-  document.getElementById('ao-src-name').textContent = a.src;
-  document.getElementById('ao-src-time').textContent = a.time + ' ago';
-  document.getElementById('ao-main-title').textContent = a.title;
-  document.getElementById('ao-text').textContent = a.text +
-    '\n\nThis story continues to develop. Our editorial team is tracking additional details and perspectives. Multiple expert sources have been contacted for comment, and we will update this article as more information becomes available.\n\nRead the full story on ' + a.src + ' for comprehensive coverage.';
+// ── LOG INTERACTION ──
+async function logInteract(articleId, category, action, duration=0) {
+  if (!ST.token) return;
+  try {
+    await api('/interact', { method:'POST', body: JSON.stringify({ article_id: articleId, category, action, duration_sec: duration }) });
+  } catch(e) {}
+}
 
+// ── OPEN ARTICLE FULL SCREEN ──
+function openArticle(a) {
+  if (!a || !a.id) return;
+  currentArticle = a;
+  const cc = CATS[a.category] || CATS.tech;
+
+  const imgEl = document.getElementById('ao-img');
+  if (a.image_url) { imgEl.src = a.image_url; imgEl.style.display='block'; }
+  else imgEl.style.display='none';
+
+  document.getElementById('ao-title-hdr').textContent = a.title;
+
+  const catPill = document.getElementById('ao-cat-pill');
+  catPill.style.color = cc.hex; catPill.textContent = cc.label;
+
+  const srcDot = document.getElementById('ao-src-dot');
+  srcDot.textContent = (a.source||'S').charAt(0).toUpperCase();
+  srcDot.style.background = cc.bg; srcDot.style.color = cc.hex;
+
+  document.getElementById('ao-src-name').textContent = a.source || '';
+  document.getElementById('ao-src-time').textContent = timeAgo(a.published_at) || '';
+  document.getElementById('ao-main-title').textContent = a.title;
+
+  const body = a.body_ai || a.preview || '';
+  document.getElementById('ao-text').textContent = body +
+    (body.length < 200 ? '' : '\n\nThis story continues to develop. Our editorial team is tracking additional details.');
+
+  // Like/save state
   const likeEl = document.getElementById('ao-like');
   const saveEl = document.getElementById('ao-save');
   likeEl.className = 'ao-act tap' + (ST.likes.includes(a.id) ? ' liked' : '');
@@ -1937,174 +2249,159 @@ function openArticle(articleId) {
   saveEl.className = 'ao-act tap' + (ST.saves.includes(a.id) ? ' saved' : '');
   saveEl.querySelector('i').className = ST.saves.includes(a.id) ? 'fa-solid fa-bookmark' : 'fa-regular fa-bookmark';
 
-  const related = articles.filter(x => x.cat === a.cat && x.id !== a.id).slice(0, 3);
+  // Related articles from what's loaded
+  const related = homeArticles.filter(x => x.category === a.category && x.id !== a.id).slice(0,3);
   const rc = document.getElementById('ao-related');
   rc.innerHTML = '';
   related.forEach(ra => {
-    const rcc = CATS[ra.cat];
+    const rcc = CATS[ra.category] || CATS.tech;
     const d = document.createElement('div');
     d.className = 'ao-related-card tap';
-    d.onclick = () => openArticle(ra.id);
+    d.onclick = () => openArticle(ra);
     d.innerHTML = `
-      <img class="ao-related-img" src="${ra.img}" loading="lazy" alt="">
+      ${ra.image_url ? `<img class="ao-related-img" src="${ra.image_url}" loading="lazy" alt="" onerror="this.style.display='none'">` : '<div class="ao-related-img" style="background:var(--bg3)"></div>'}
       <div class="ao-related-info">
         <div class="ao-related-cat" style="color:${rcc.hex}">${rcc.short}</div>
         <div class="ao-related-title">${ra.title}</div>
-        <div class="ao-related-src">${ra.src} · ${ra.time}</div>
+        <div class="ao-related-src">${ra.source} · ${timeAgo(ra.published_at)}</div>
       </div>`;
     rc.appendChild(d);
   });
 
+  // Quiz (if available)
+  const quiz = a.quiz;
+  if (quiz && quiz.length > 0 && rc.parentNode) {
+    const qcard = document.createElement('div');
+    qcard.className = 'explore-quiz-card';
+    qcard.style.marginBottom = '16px';
+    const q = quiz[0];
+    let qAnswered = false;
+    qcard.innerHTML = `
+      <div style="font-size:0.62rem;font-weight:700;color:var(--accent);letter-spacing:1px;margin-bottom:8px">ARTICLE QUIZ</div>
+      <div class="quiz-q">${q.question}</div>
+      <div class="quiz-opts">
+        ${(q.options||[]).map((o,i)=>`<div class="quiz-opt tap" data-i="${i}">${o}</div>`).join('')}
+      </div>`;
+    qcard.querySelectorAll('.quiz-opt').forEach(optEl => {
+      optEl.onclick = () => {
+        if (qAnswered) return;
+        qAnswered = true;
+        const chosen = parseInt(optEl.dataset.i);
+        const correct = q.answer_index ?? 0;
+        qcard.querySelectorAll('.quiz-opt').forEach((o,i) => {
+          if (i===correct) o.classList.add('correct');
+          else if (i===chosen && chosen!==correct) o.classList.add('wrong');
+        });
+        toast(chosen===correct ? '🎉 Correct!' : '❌ Wrong! See the highlight.');
+        logInteract(a.id, a.category, 'quiz_complete');
+      };
+    });
+    const body = document.querySelector('.ao-body');
+    if (body) body.insertBefore(qcard, rc);
+  }
+
   document.getElementById('ao-scroll').scrollTop = 0;
   document.getElementById('article-overlay').classList.add('open');
+  logInteract(a.id, a.category, 'read');
 }
+
 function closeArticle() {
   document.getElementById('article-overlay').classList.remove('open');
   currentArticle = null;
+  // Clean up quiz cards
+  document.querySelectorAll('.ao-body .explore-quiz-card').forEach(e=>e.remove());
 }
+
 function aoLike() {
   if (!currentArticle) return;
   const el = document.getElementById('ao-like');
   const i = ST.likes.indexOf(currentArticle.id);
-  if (i===-1) { ST.likes.push(currentArticle.id); el.classList.add('liked'); el.querySelector('i').className='fa-solid fa-heart'; }
-  else { ST.likes.splice(i,1); el.classList.remove('liked'); el.querySelector('i').className='fa-regular fa-heart'; }
-  save();
+  if (i===-1) {
+    ST.likes.push(currentArticle.id); el.classList.add('liked');
+    el.querySelector('i').className='fa-solid fa-heart';
+    logInteract(currentArticle.id, currentArticle.category, 'like');
+  } else {
+    ST.likes.splice(i,1); el.classList.remove('liked');
+    el.querySelector('i').className='fa-regular fa-heart';
+  }
+  persist();
 }
+
 function aoSave() {
   if (!currentArticle) return;
   const el = document.getElementById('ao-save');
   const i = ST.saves.indexOf(currentArticle.id);
-  if (i===-1) { ST.saves.push(currentArticle.id); el.classList.add('saved'); el.querySelector('i').className='fa-solid fa-bookmark'; toast('🔖 Saved!'); }
-  else { ST.saves.splice(i,1); el.classList.remove('saved'); el.querySelector('i').className='fa-regular fa-bookmark'; toast('✓ Removed'); }
-  save();
+  if (i===-1) {
+    ST.saves.push(currentArticle.id); el.classList.add('saved');
+    el.querySelector('i').className='fa-solid fa-bookmark'; toast('🔖 Saved!');
+    logInteract(currentArticle.id, currentArticle.category, 'save');
+  } else {
+    ST.saves.splice(i,1); el.classList.remove('saved');
+    el.querySelector('i').className='fa-regular fa-bookmark'; toast('✓ Removed');
+  }
+  persist();
   const sc = document.getElementById('saved-ct');
   if (sc) sc.textContent = ST.saves.length;
 }
 
-// ── HOME RENDER ──
-function renderHome(n=8) {
-  const c = document.getElementById('home-feed');
-  const pool = curChip === 'all' ? articles : articles.filter(a => a.cat === curChip);
-  if (!pool.length) { c.innerHTML = '<div style="text-align:center;color:var(--t3);padding:40px 20px">No articles found.</div>'; return; }
+// ── EXPLORE ──
+function renderExpHeroWithArticles(arts) {
+  expHeroArts = arts.filter(a => a.image_url);
+  if (!expHeroArts.length) return;
+  expHeroIdx = 0;
+  renderExpHeroSlide();
+  clearInterval(expHeroTimer);
+  expHeroTimer = setInterval(() => { expHeroIdx++; renderExpHeroSlide(); }, 5000);
+}
 
-  for (let i=0; i<n; i++) {
-    const a = pool[homeIdx++ % pool.length];
-    const cc = CATS[a.cat];
-    const liked = ST.likes.includes(a.id), saved = ST.saves.includes(a.id);
+function renderExpHeroSlide() {
+  const wrap = document.getElementById('exp-hero-wrap');
+  if (!expHeroArts.length || !wrap) return;
+  const a  = expHeroArts[expHeroIdx % expHeroArts.length];
+  const cc = CATS[a.category] || CATS.tech;
+  wrap.innerHTML = `
+    <div class="exp-hero tap" onclick='openArticle(${JSON.stringify(a).replace(/'/g,"&#39;")})'>
+      <img src="${a.image_url}" loading="lazy" alt="" onerror="this.src=''">
+      <div class="exp-hero-overlay">
+        <div class="exp-hero-badge"><span style="color:${cc.hex}">${cc.icon}</span> ${cc.short}</div>
+        <div class="exp-hero-title">${a.title}</div>
+        <div class="exp-hero-src">${a.source} · ${timeAgo(a.published_at)}</div>
+        <div class="exp-hero-dots">
+          ${expHeroArts.slice(0,4).map((_,i)=>`<div class="exp-hero-dot ${i===expHeroIdx%expHeroArts.length?'on':''}"></div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+}
 
-    // First article = spotlight card
-    if (homeIdx === 1 && curChip === 'all' && i === 0 && a.breaking) {
-      const d = document.createElement('div');
-      d.className = 'nc-spotlight fadein tap';
-      d.onclick = () => openArticle(a.id);
-      d.innerHTML = `
-        <img src="${a.img}" loading="lazy" alt="">
-        <div class="nc-spotlight-overlay">
-          <div class="nc-spot-cat"><span style="color:${cc.hex}">${cc.icon}</span> ${cc.short}</div>
-          <div class="nc-spot-title">${a.title}</div>
-          <div class="nc-spot-src">${a.src} · ${a.time} ago</div>
-        </div>`;
-      c.appendChild(d);
-      continue;
-    }
-
+function updateExpGrid(articles) {
+  const c = document.getElementById('exp-grid');
+  c.innerHTML = '';
+  articles.forEach((a,i) => {
+    const cc = CATS[a.category] || CATS.tech;
     const d = document.createElement('div');
-    d.className = 'nc fadein';
-    d.dataset.id = a.id;
-
-    // Single click = expand inline; double click = open full article
-    let clickTimer = null;
-    d.addEventListener('click', (e) => {
-      if (e.target.closest('.nc-act')) return;
-      if (clickTimer) {
-        // Double click
-        clearTimeout(clickTimer);
-        clickTimer = null;
-        openArticle(a.id);
-      } else {
-        clickTimer = setTimeout(() => {
-          clickTimer = null;
-          // Single click — toggle expand
-          const isExpanded = d.classList.contains('expanded');
-          if (isExpanded) {
-            d.classList.remove('expanded');
-          } else {
-            d.classList.add('expanded');
-          }
-        }, 240);
-      }
-    });
-
+    d.className = 'exp-card fadein tap' + (i%7===0?' tall':'');
+    d.onclick = () => openArticle(a);
     d.innerHTML = `
-      <div class="nc-meta">
-        <div class="nc-src-ico">${a.src.charAt(0)}</div>
-        <span class="nc-src">${a.src}</span>
-        ${a.breaking ? `<span class="nc-tag" style="background:${cc.bg};color:${cc.hex}">BREAKING</span>` : `<span class="nc-tag" style="background:${cc.bg};color:${cc.hex}">${cc.short}</span>`}
-      </div>
-      <div class="nc-body">
-        <div class="nc-text">
-          <div class="nc-title">${a.title}</div>
-          <div class="nc-desc">${a.text}</div>
-          <div class="nc-expand-extra">${a.text} Our correspondents on the ground report that experts are closely monitoring the situation. Follow-up coverage will include reactions from key stakeholders, government response, and potential long-term implications.<br><br><span style="color:var(--accent);font-weight:600;font-size:0.74rem">Double-tap to read full article →</span></div>
-          <div class="nc-tap-hint">Tap to expand · Double-tap for full article</div>
-        </div>
-        <img class="nc-img" src="${a.img}" loading="lazy" alt="">
-      </div>
-      <div class="nc-acts">
-        <div class="nc-act tap ${liked?'red':''}" onclick="toggleLike(${a.id},this)">
-          <i class="fa-${liked?'solid':'regular'} fa-heart"></i>
-        </div>
-        <div class="nc-act tap ${saved?'acc':''}" onclick="toggleSave(${a.id},this)">
-          <i class="fa-${saved?'solid':'regular'} fa-bookmark"></i>
-        </div>
-        <div class="nc-act tap" onclick="shareArt('${a.title.replace(/'/g,"\\'")}')"><i class="fa-solid fa-paper-plane"></i></div>
-        <div class="nc-sp"></div>
-        <div class="nc-act tap" style="color:var(--accent);font-size:0.7rem;font-weight:700" onclick="openArticle(${a.id})">
-          Read <i class="fa-solid fa-arrow-right" style="font-size:0.65rem"></i>
-        </div>
+      ${a.image_url ? `<img src="${a.image_url}" loading="lazy" alt="" onerror="this.style.display='none'">` : `<div style="height:120px;background:${cc.bg}"></div>`}
+      <div class="exp-card-info">
+        <div class="exp-card-cat" style="color:${cc.hex}">${cc.icon} ${cc.short}</div>
+        <div class="exp-card-title">${a.title}</div>
       </div>`;
     c.appendChild(d);
-  }
+  });
 }
 
-// ── EXPLORE HERO ──
-function renderExpHero() {
-  const wrap = document.getElementById('exp-hero-wrap');
-  const heroArts = articles.filter(a=>a.breaking).slice(0,4);
-  if (!heroArts.length) heroArts.push(...articles.slice(0,4));
-  let current = 0;
-  const render = (idx) => {
-    const a = heroArts[idx % heroArts.length];
-    const cc = CATS[a.cat];
-    wrap.innerHTML = `
-      <div class="exp-hero tap" onclick="openArticle(${a.id})">
-        <img src="${a.img}" loading="lazy" alt="">
-        <div class="exp-hero-overlay">
-          <div class="exp-hero-badge"><span style="color:${cc.hex}">${cc.icon}</span> ${cc.short}</div>
-          <div class="exp-hero-title">${a.title}</div>
-          <div class="exp-hero-src">${a.src} · ${a.time}</div>
-          <div class="exp-hero-dots">
-            ${heroArts.map((_,i)=>`<div class="exp-hero-dot ${i===idx%heroArts.length?'on':''}"></div>`).join('')}
-          </div>
-        </div>
-      </div>`;
-  };
-  render(current);
-  setInterval(() => { current++; render(current); }, 5000);
-}
-
-// ── EXPLORE CATEGORIES ──
 function renderExpCats() {
   const c = document.getElementById('exp-cat-row');
   if (c.children.length) return;
   const cats = [
-    { label:'Arts', color:'#FF5B5B', icon:'fa-palette', cat:'arts' },
-    { label:'Well-being', color:'#FF8C42', icon:'fa-heart', cat:'selfwell' },
-    { label:'Business', color:'#FFD166', icon:'fa-chart-line', cat:'economy' },
-    { label:'Nature', color:'#52C17A', icon:'fa-leaf', cat:'nature' },
-    { label:'Society', color:'#E0574F', icon:'fa-users', cat:'society' },
-    { label:'Sci & Tech', color:'#00C2CC', icon:'fa-flask', cat:'tech' },
-    { label:'Philosophy', color:'#A855F7', icon:'fa-book-open', cat:'philo' },
+    { label:'Arts',      color:'#FF5B5B', icon:'fa-palette',   cat:'arts' },
+    { label:'Well-being',color:'#FF8C42', icon:'fa-heart',     cat:'selfwell' },
+    { label:'Business',  color:'#FFD166', icon:'fa-chart-line',cat:'economy' },
+    { label:'Nature',    color:'#52C17A', icon:'fa-leaf',      cat:'nature' },
+    { label:'Society',   color:'#E0574F', icon:'fa-users',     cat:'society' },
+    { label:'Sci & Tech',color:'#00C2CC', icon:'fa-flask',     cat:'tech' },
+    { label:'Philosophy',color:'#A855F7', icon:'fa-book-open', cat:'philo' },
   ];
   cats.forEach(ct => {
     const d = document.createElement('div');
@@ -2117,14 +2414,14 @@ function renderExpCats() {
   });
 }
 
-// ── EXPLORE INTERACTIONS ──
 function renderExpInteractions() {
   const row = document.getElementById('exp-interact-row');
+  if (row.children.length) return;
   const cards = [
-    { icon:'🗺', title:'By Map', sub:'Tap regions', tag:'Interactive', tagColor:'#4F6BD4', bg:'linear-gradient(135deg,#0D1035,#2C3D8F)', action:()=>toast('🗺 Map view coming in v21!') },
-    { icon:'📊', title:'Charts', sub:'Visual data', tag:'New', tagColor:'#52C17A', bg:'linear-gradient(135deg,#0a1f0a,#1a4a1a)', action:()=>toast('📊 Charts view') },
-    { icon:'🎙', title:'Audio', sub:'Listen along', tag:'Audio', tagColor:'#FF8C42', bg:'linear-gradient(135deg,#1f0e00,#3a1f00)', action:()=>toast('🎙 Audio coming soon') },
-    { icon:'🧠', title:'AI Brief', sub:'Your digest', tag:'AI', tagColor:'#A855F7', bg:'linear-gradient(135deg,#1a0030,#3a0060)', action:()=>toast('🧠 AI Brief loading...') },
+    { icon:'🔍', title:'Search',   sub:'Find any topic',  tag:'Search',  tagColor:'#4F6BD4', bg:'linear-gradient(135deg,#0D1035,#2C3D8F)', action:()=>toast('🔍 Type in search above') },
+    { icon:'📊', title:'Charts',   sub:'Visual data',     tag:'New',     tagColor:'#52C17A', bg:'linear-gradient(135deg,#0a1f0a,#1a4a1a)', action:()=>toast('📊 Charts view coming soon') },
+    { icon:'🎙', title:'Audio',    sub:'Listen along',    tag:'Audio',   tagColor:'#FF8C42', bg:'linear-gradient(135deg,#1f0e00,#3a1f00)', action:()=>toast('🎙 Audio coming soon') },
+    { icon:'🧠', title:'AI Brief', sub:'Your digest',     tag:'AI',      tagColor:'#A855F7', bg:'linear-gradient(135deg,#1a0030,#3a0060)', action:()=>toast('🧠 AI Brief loading...') },
   ];
   cards.forEach(card => {
     const d = document.createElement('div');
@@ -2140,87 +2437,93 @@ function renderExpInteractions() {
   });
 }
 
-// ── QUIZ ──
 function renderQuiz() {
   const c = document.getElementById('explore-quiz');
+  if (!c) return;
   const qz = [
-    { q: 'Which Indian city is known as the "Silicon Valley of India"?', opts: ['Hyderabad','Pune','Bengaluru','Chennai'], ans: 2 },
-    { q: 'What year did India launch its first satellite, Aryabhata?', opts: ['1972','1975','1980','1969'], ans: 1 },
-    { q: 'Which Indian scientist won the Nobel Prize in Physics in 1930?', opts: ['Homi Bhabha','CV Raman','Satyendra Bose','APJ Kalam'], ans: 1 },
+    { q:'Which Indian city is known as the "Silicon Valley of India"?', opts:['Hyderabad','Pune','Bengaluru','Chennai'], ans:2 },
+    { q:'What year did India launch its first satellite, Aryabhata?',   opts:['1972','1975','1980','1969'],              ans:1 },
+    { q:'Which Indian scientist won the Nobel Prize in Physics in 1930?',opts:['Homi Bhabha','CV Raman','Satyendra Bose','APJ Kalam'],ans:1 },
   ];
-  const q = qz[Math.floor(Math.random() * qz.length)];
+  const q = qz[Math.floor(Math.random()*qz.length)];
+  quizAnswered = false;
   c.innerHTML = `<div style="font-size:0.62rem;font-weight:700;color:var(--accent);letter-spacing:1px;margin-bottom:8px">DAILY QUIZ</div>
     <div class="quiz-q">${q.q}</div>
     <div class="quiz-opts">
-      ${q.opts.map((o,i) => `<div class="quiz-opt tap" onclick="answerQuiz(this,${i},${q.ans})">${o}</div>`).join('')}
+      ${q.opts.map((o,i)=>`<div class="quiz-opt tap" onclick="answerQuiz(this,${i},${q.ans})">${o}</div>`).join('')}
     </div>`;
 }
+
 function answerQuiz(el, idx, ans) {
   if (quizAnswered) return;
   quizAnswered = true;
   el.closest('.quiz-opts').querySelectorAll('.quiz-opt').forEach((o,i) => {
-    if (i === ans) o.classList.add('correct');
-    else if (i === idx && idx !== ans) o.classList.add('wrong');
+    if (i===ans) o.classList.add('correct');
+    else if (i===idx && idx!==ans) o.classList.add('wrong');
   });
-  toast(idx === ans ? '🎉 Correct!' : '❌ Wrong! See the highlight.');
-}
-
-// ── EXPLORE GRID ──
-function renderExpGrid(n=14) {
-  const c = document.getElementById('exp-grid');
-  const pool = articles.slice(expIdx, expIdx + n);
-  expIdx += n;
-  pool.forEach((a,i) => {
-    const cc = CATS[a.cat];
-    const d = document.createElement('div');
-    d.className = 'exp-card fadein tap' + (i%7===0?' tall':'');
-    d.onclick = () => openArticle(a.id);
-    d.innerHTML = `
-      <img src="${a.img}" loading="lazy" alt="">
-      <div class="exp-card-info">
-        <div class="exp-card-cat" style="color:${cc.hex}">${cc.icon} ${cc.short}</div>
-        <div class="exp-card-title">${a.title}</div>
-      </div>`;
-    c.appendChild(d);
-  });
+  toast(idx===ans ? '🎉 Correct!' : '❌ Wrong! See the highlight.');
 }
 
 // ── BOOKMARKS ──
-function renderBM() {
+async function renderBM() {
   const c = document.getElementById('bm-feed');
-  c.innerHTML = '';
-  const saved = articles.filter(a => ST.saves.includes(a.id));
-  if (!saved.length) {
-    c.innerHTML = '<div style="text-align:center;color:var(--t3);padding:50px 20px;font-size:0.88rem">No bookmarks yet.<br><span style="font-size:0.78rem;opacity:0.6">Tap the bookmark icon on any article.</span></div>';
-    return;
+  c.innerHTML = '<div style="text-align:center;color:var(--t3);padding:30px;font-size:0.8rem">Loading...</div>';
+
+  try {
+    let savedArticles = [];
+    if (ST.token) {
+      const data = await api('/bookmarks');
+      savedArticles = data.articles || [];
+    } else {
+      // Local saves — find from homeArticles
+      savedArticles = homeArticles.filter(a => ST.saves.includes(a.id));
+    }
+
+    c.innerHTML = '';
+    if (!savedArticles.length) {
+      c.innerHTML = '<div style="text-align:center;color:var(--t3);padding:50px 20px;font-size:0.88rem">No bookmarks yet.<br><span style="font-size:0.78rem;opacity:0.6">Tap the bookmark icon on any article.</span></div>';
+      return;
+    }
+
+    savedArticles.forEach(a => {
+      const cc = CATS[a.category] || CATS.tech;
+      const d = document.createElement('div');
+      d.className = 'bm-card fadein tap';
+      d.onclick = (e) => { if (!e.target.closest('.bm-act')) openArticle(a); };
+      d.innerHTML = `
+        ${a.image_url ? `<img class="bm-img" src="${a.image_url}" loading="lazy" alt="" onerror="this.style.display='none'">` : `<div class="bm-img" style="background:${cc.bg}"></div>`}
+        <div class="bm-info">
+          <div class="bm-title">${a.title}</div>
+          <div class="bm-src">${a.source} · ${cc.short}</div>
+          <div class="bm-acts">
+            <i class="fa-regular fa-heart bm-act tap"></i>
+            <i class="fa-solid fa-bookmark bm-act saved tap" onclick="toggleSave('${a.id}','${a.category}',this)"></i>
+            <i class="fa-solid fa-paper-plane bm-act tap" onclick="shareArt('${(a.title||'').replace(/'/g,"\\'")}')" ></i>
+          </div>
+        </div>`;
+      c.appendChild(d);
+    });
+  } catch(e) {
+    c.innerHTML = '<div style="text-align:center;color:var(--t3);padding:30px">Sign in to sync bookmarks across devices.</div>';
   }
-  saved.forEach(a => {
-    const d = document.createElement('div');
-    d.className = 'bm-card fadein tap';
-    d.onclick = (e) => { if (!e.target.closest('.bm-act')) openArticle(a.id); };
-    d.innerHTML = `
-      <img class="bm-img" src="${a.img}" loading="lazy" alt="">
-      <div class="bm-info">
-        <div class="bm-title">${a.title}</div>
-        <div class="bm-src">${a.src} · ${a.cat}</div>
-        <div class="bm-acts">
-          <i class="fa-regular fa-heart bm-act tap" onclick="toggleLike(${a.id},this)"></i>
-          <i class="fa-solid fa-bookmark bm-act saved tap" onclick="toggleSave(${a.id},this)"></i>
-          <i class="fa-solid fa-paper-plane bm-act tap" onclick="shareArt('${a.title.replace(/'/g,"\\'")}')"></i>
-        </div>
-      </div>`;
-    c.appendChild(d);
-  });
 }
 
 // ── NOTIFICATIONS ──
 function renderNotifs() {
   const c = document.getElementById('notifs-feed');
   c.innerHTML = '';
+  const notifData = [
+    { img:'', title:'Your feed has been updated with new articles', time:'Just now' },
+    { img:'', title:'You have 3 unread articles in Sci & Tech', time:'10 min ago' },
+    { img:'', title:'Daily quiz is ready — test your knowledge', time:'1 hr ago' },
+    { img:'', title:'New trending story in Business & Economy', time:'2 hr ago' },
+  ];
   notifData.forEach(n => {
     const d = document.createElement('div');
     d.className = 'notif fadein';
-    d.innerHTML = `<div class="notif-dot"></div><img class="notif-img" src="${n.img}" loading="lazy" alt=""><div class="notif-body"><div class="notif-title">${n.title}</div><div class="notif-time">${n.time} ago</div></div>`;
+    d.innerHTML = `<div class="notif-dot"></div>
+      <div style="width:44px;height:44px;border-radius:10px;background:var(--bg3);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.2rem">⚡</div>
+      <div class="notif-body"><div class="notif-title">${n.title}</div><div class="notif-time">${n.time}</div></div>`;
     c.appendChild(d);
   });
 }
@@ -2233,16 +2536,14 @@ function renderFeedFilterChips() {
     const on = activeFeedCats.has(key);
     const d = document.createElement('div');
     d.className = `ffc tap${on?' on':''}`;
-    d.style.color = on ? '#fff' : cat.hex;
-    d.style.borderColor = on ? 'transparent' : 'var(--line)';
+    d.style.color      = on ? '#fff' : cat.hex;
+    d.style.borderColor= on ? 'transparent' : 'var(--line)';
     d.style.background = on ? cat.hex : 'transparent';
-    d.textContent = cat.icon + ' ' + cat.short;
+    d.textContent      = cat.icon + ' ' + cat.short;
     d.onclick = () => {
       if (activeFeedCats.has(key)) activeFeedCats.delete(key);
       else activeFeedCats.add(key);
-      renderFeedFilterChips();
-      renderFeedCatCards();
-      renderFeedArticles();
+      renderFeedFilterChips(); renderFeedCatCards(); renderFeedArticles();
     };
     c.appendChild(d);
   });
@@ -2254,19 +2555,17 @@ function renderFeedCatCards() {
   const pcts = { arts:72, selfwell:45, economy:88, nature:56, society:63, tech:91, philo:38 };
   Object.entries(CATS).forEach(([key,cat]) => {
     const pct = pcts[key]||50;
-    const on = activeFeedCats.has(key);
-    const d = document.createElement('div');
+    const on  = activeFeedCats.has(key);
+    const d   = document.createElement('div');
     d.className = 'fcat-card';
     d.style.background = `linear-gradient(135deg, ${cat.hex}CC, ${cat.hex}88)`;
     d.onclick = () => {
       if (activeFeedCats.has(key)) activeFeedCats.delete(key);
       else activeFeedCats.add(key);
-      renderFeedCatCards();
-      renderFeedFilterChips();
-      renderFeedArticles();
+      renderFeedCatCards(); renderFeedFilterChips(); renderFeedArticles();
     };
     d.innerHTML = `
-      <div class="fcat-tog${on?' on':''}" id="fct-${key}"></div>
+      <div class="fcat-tog${on?' on':''}"></div>
       <div class="fcat-card-icon">${cat.icon}</div>
       <div class="fcat-card-name">${cat.short}</div>
       <div class="fcat-card-desc">${cat.label}</div>
@@ -2280,21 +2579,21 @@ function renderFeedTopics() {
   const topics = ['AI','Climate','Politics','Finance','Cricket','Bollywood','Science','Startups','Health','Education','Space','Defence','Environment','Crypto','Infrastructure'];
   const c = document.getElementById('feed-topics');
   c.innerHTML = '';
-  const catColors = ['#FF5B5B','#FF8C42','#FFD166','#52C17A','#4F6BD4','#7B8FE8','#A855F7'];
+  const colors = ['#FF5B5B','#FF8C42','#FFD166','#52C17A','#4F6BD4','#7B8FE8','#A855F7'];
   topics.forEach(t => {
-    const on = activeFeedTopics.has(t);
-    const color = catColors[topics.indexOf(t) % catColors.length];
-    const d = document.createElement('div');
-    d.className = `feed-topic${on?' on':''}`;
-    d.style.color = on ? '#fff' : color;
-    d.style.borderColor = on ? color : 'var(--line)';
-    d.style.background = on ? color : 'transparent';
+    const on    = activeFeedTopics.has(t);
+    const color = colors[topics.indexOf(t) % colors.length];
+    const d     = document.createElement('div');
+    d.className  = `feed-topic${on?' on':''}`;
+    d.style.color       = on ? '#fff' : color;
+    d.style.borderColor = on ? color  : 'var(--line)';
+    d.style.background  = on ? color  : 'transparent';
     d.textContent = t;
     d.onclick = () => {
       if (activeFeedTopics.has(t)) activeFeedTopics.delete(t);
       else activeFeedTopics.add(t);
       renderFeedTopics();
-      toast(`${on?'✓ Removed':'✓ Added'}: ${t}`);
+      toast((on?'✓ Removed':'✓ Added') + ': ' + t);
     };
     c.appendChild(d);
   });
@@ -2304,20 +2603,25 @@ function renderFeedArticles() {
   const c = document.getElementById('feed-articles');
   c.innerHTML = '';
   const activeArr = Array.from(activeFeedCats);
-  const pool = articles.filter(a => activeArr.includes(a.cat)).slice(0, 12);
-  if (!pool.length) { c.innerHTML = '<div style="text-align:center;color:var(--t3);padding:30px 0">Enable some categories to see articles.</div>'; return; }
+  const pool = homeArticles.filter(a => activeArr.includes(a.category)).slice(0,12);
+
+  if (!pool.length) {
+    c.innerHTML = '<div style="text-align:center;color:var(--t3);padding:30px 0">Enable categories above to see articles.</div>';
+    return;
+  }
+
   pool.forEach(a => {
-    const cc = CATS[a.cat];
-    const d = document.createElement('div');
+    const cc = CATS[a.category] || CATS.tech;
+    const d  = document.createElement('div');
     d.className = 'feed-art-card fadein tap';
-    d.onclick = () => { navTo('home'); openArticle(a.id); };
+    d.onclick   = () => openArticle(a);
     d.innerHTML = `
       <div class="fac-stripe" style="background:${cc.hex}"></div>
-      <img class="fac-img" src="${a.img}" loading="lazy" alt="">
+      ${a.image_url ? `<img class="fac-img" src="${a.image_url}" loading="lazy" alt="" onerror="this.style.display='none'">` : `<div class="fac-img" style="background:${cc.bg}"></div>`}
       <div class="fac-info">
         <div class="fac-cat" style="color:${cc.hex}">${cc.icon} ${cc.short}</div>
         <div class="fac-title">${a.title}</div>
-        <div class="fac-src">${a.src} · ${a.time}</div>
+        <div class="fac-src">${a.source} · ${timeAgo(a.published_at)}</div>
       </div>`;
     c.appendChild(d);
   });
@@ -2330,25 +2634,22 @@ const NB_MAP   = { home:'nb-home', explore:'nb-explore', profile:'nb-profile' };
 function navTo(name) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.querySelectorAll('.nb').forEach(b => b.classList.remove('on'));
-  const vEl = document.getElementById(VIEW_MAP[name]);
-  if (vEl) vEl.classList.add('active');
-  const nb = document.getElementById(NB_MAP[name]);
-  if (nb) nb.classList.add('on');
+  document.getElementById(VIEW_MAP[name])?.classList.add('active');
+  document.getElementById(NB_MAP[name])?.classList.add('on');
 
-  // Always show nav when switching views
-  nav.classList.remove('hidden');
+  navEl.classList.remove('hidden');
   lastScrollY = 0;
 
   const hBrand  = document.getElementById('h-brand');
   const hPage   = document.getElementById('h-page');
   const hSearch = document.getElementById('h-search');
   const langBtn = document.getElementById('lang-btn');
+
   hBrand.style.display='flex'; hPage.style.display='none'; hSearch.style.display='none';
 
   if (name==='explore') {
     hBrand.style.display='none'; hPage.style.display='block'; hPage.textContent='Explore';
-    hSearch.style.display='flex';
-    langBtn.style.display='none'; // Explore header: no lang btn
+    hSearch.style.display='flex'; langBtn.style.display='none';
   } else if (name==='feed') {
     hBrand.style.display='none'; hPage.style.display='block'; hPage.textContent='FEED Pulse';
     langBtn.style.display='flex';
@@ -2358,95 +2659,106 @@ function navTo(name) {
     hPage.textContent = lbls[name];
     langBtn.style.display='none';
   } else {
-    // home
     langBtn.style.display='flex';
   }
 
   if (name==='bookmarks') renderBM();
-  if (name==='notifs') renderNotifs();
-  if (name==='profile') document.getElementById('saved-ct').textContent = ST.saves.length;
-}
-
-// ── SCOPE TOGGLE ──
-function selScope(btn, scope) {
-  btn.closest('.scope-toggle').querySelectorAll('.scope-btn').forEach(b => b.classList.remove('on'));
-  btn.classList.add('on');
-  toast('📍 ' + scope.charAt(0).toUpperCase() + scope.slice(1) + ' stories');
-}
-
-// ── SHARE ──
-function shareArt(title) {
-  if (navigator.share) navigator.share({ title:'SherrByte: '+title, url:location.href }).catch(()=>{});
-  else { navigator.clipboard?.writeText(title).catch(()=>{}); toast('📋 Copied to clipboard'); }
-}
-
-// ── LANGUAGE PICKER ──
-let currentLang = 'English';
-function toggleLangPicker() {
-  const p = document.getElementById('lang-picker');
-  p.classList.toggle('open');
-}
-function setLang(lang, flag) {
-  currentLang = lang;
-  // Update all active states
-  document.querySelectorAll('.lang-item').forEach(el => {
-    el.classList.remove('active');
-    if (el.textContent.trim().includes(lang)) el.classList.add('active');
-  });
-  document.getElementById('lang-picker').classList.remove('open');
-  toast(`${flag} Language: ${lang}`);
-  // Re-render home to reflect language change (simulated)
-  document.getElementById('home-feed').innerHTML = '';
-  homeIdx = 0;
-  renderHome(10);
-}
-// Close lang picker when clicking outside
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('#lang-picker') && !e.target.closest('#lang-btn')) {
-    document.getElementById('lang-picker')?.classList.remove('open');
+  if (name==='notifs')    renderNotifs();
+  if (name==='profile') {
+    document.getElementById('saved-ct').textContent = ST.saves.length;
+    if (ST.token) loadProfileFromAPI();
   }
-});
+  if (name==='feed') {
+    renderFeedArticles();
+  }
+}
 
-// ── BOTTOM NAV SCROLL HIDE/SHOW ──
+async function loadProfileFromAPI() {
+  try {
+    const me = await api('/me');
+    const nameEl = document.querySelector('.prof-name');
+    const handleEl = document.querySelector('.prof-handle');
+    if (nameEl && me.display_name) nameEl.textContent = me.display_name;
+    if (handleEl && me.email) handleEl.textContent = '@' + me.email.split('@')[0] + ' ✦';
+    // Update interest vector display
+    ST.interests = me.interests || {};
+    persist();
+  } catch(e) {}
+}
+
+// ── TIME AGO ──
+function timeAgo(dateStr) {
+  if (!dateStr) return '';
+  try {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const h = Math.floor(diff / 3600000);
+    if (h < 1) return Math.floor(diff/60000) + 'm ago';
+    if (h < 24) return h + 'h ago';
+    return Math.floor(h/24) + 'd ago';
+  } catch(e) { return ''; }
+}
+
+// ── SCROLL HIDE/SHOW NAV ──
 let navHideTimer = null;
 function handleNavScroll(e) {
   const st = e.target.scrollTop;
-  if (st > lastScrollY + 10) {
-    // Scrolling down — hide nav
-    nav.classList.add('hidden');
-    clearTimeout(navHideTimer);
-  } else if (st < lastScrollY - 10) {
-    // Scrolling up — show nav
-    nav.classList.remove('hidden');
-  }
+  if (st > lastScrollY + 10) { navEl.classList.add('hidden'); clearTimeout(navHideTimer); }
+  else if (st < lastScrollY - 10) navEl.classList.remove('hidden');
   lastScrollY = st;
 }
 document.getElementById('v-home').addEventListener('scroll', e => {
   handleNavScroll(e);
-  if (e.target.scrollTop + e.target.clientHeight >= e.target.scrollHeight - 240) renderHome(5);
+  if (e.target.scrollTop + e.target.clientHeight >= e.target.scrollHeight - 240) loadFeed();
 });
-document.getElementById('v-explore').addEventListener('scroll', e => {
-  handleNavScroll(e);
-  if (e.target.scrollTop + e.target.clientHeight >= e.target.scrollHeight - 240) renderExpGrid(6);
-});
+document.getElementById('v-explore').addEventListener('scroll', handleNavScroll);
+
+// ── SIDEBAR LOGOUT WIRE ──
+document.querySelector('.sb-logout').addEventListener('click', signOut);
+
+// ── SIDEBAR AUTH ITEM ──
+// Replace sidebar profile item with login trigger if not logged in
+function updateSidebarAuth() {
+  const sbHead = document.querySelector('.sb-head');
+  if (!sbHead) return;
+  const sbName = document.querySelector('.sb-name');
+  const sbHandle = document.querySelector('.sb-handle');
+  if (!ST.token) {
+    if (sbName) sbName.textContent = 'Sign In / Register';
+    if (sbHandle) sbHandle.textContent = 'Tap to get a personalised feed';
+    sbHead.onclick = () => { sbClose(); showAuthModal(); };
+    sbHead.style.cursor = 'pointer';
+  }
+}
 
 // ── INIT ──
 window.addEventListener('load', () => {
   setTimeout(() => document.getElementById('splash').classList.add('gone'), 2000);
 });
+
 document.addEventListener('DOMContentLoaded', () => {
-  renderHome(10);
-  renderExpHero();
+  // Initial renders
   renderExpCats();
   renderExpInteractions();
   renderQuiz();
-  renderExpGrid(14);
   renderFeedFilterChips();
   renderFeedCatCards();
   renderFeedTopics();
-  renderFeedArticles();
+  updateSidebarAuth();
+
+  // Update saved count
   document.getElementById('saved-ct').textContent = ST.saves.length;
+
+  // Load live feed
+  loadFeed(true).then(() => {
+    // After feed loads, populate explore hero and grid
+    if (homeArticles.length) {
+      renderExpHeroWithArticles(homeArticles);
+      updateExpGrid(homeArticles.slice(0,14));
+      renderFeedArticles();
+    }
+  });
 });
+
 </script>
 </body>
 </html>
