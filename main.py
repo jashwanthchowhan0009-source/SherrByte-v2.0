@@ -1,50 +1,67 @@
 """
-SherByte Backend — main.py
-Install: pip install -r requirements.txt
-Run:     python main.py
-Deploy:  Set env vars on Render/Railway, then push to GitHub.
+SherByte Backend — main.py  v2.1  (PRODUCTION READY)
+=====================================================
+Install : pip install -r requirements.txt
+Run     : python main.py
+Deploy  : push to GitHub → Render picks up render.yaml automatically
+
+Environment variables required on Render:
+  GEMINI_API_KEY   → https://aistudio.google.com   (required)
+  JWT_SECRET       → any long random string         (required)
+  NEWSAPI_KEY      → https://newsapi.org            (optional, RSS works without it)
 """
 
-import os, json, math, hashlib, asyncio, logging, uuid
+# ─── stdlib ───────────────────────────────────────────────────────────────────
+import os
+import json
+import math
+import hashlib
+import asyncio
+import logging
+import uuid
+import sqlite3
 from datetime import datetime, timedelta, timezone
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Optional
 
+# ─── third-party ──────────────────────────────────────────────────────────────
 import httpx
 import feedparser
-import sqlite3
-from pathlib import Path
+from google import genai                          # pip install google-genai
 
-import google.generativeai as genai
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
-from jose import JWTError, jwt
-from passlib.context import CryptContext
+from jose import JWTError, jwt                    # pip install python-jose[cryptography]
+from passlib.context import CryptContext          # pip install passlib[bcrypt]
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from dotenv import load_dotenv
+from dotenv import load_dotenv                    # pip install python-dotenv
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 1. BOOTSTRAP
+# SECTION 1 — BOOTSTRAP
 # ─────────────────────────────────────────────────────────────────────────────
 load_dotenv()
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+)
 log = logging.getLogger("sherbyte")
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 2. CONFIG  (all env vars read here, nothing else reads os.getenv)
+# SECTION 2 — CONFIG  (read all env vars in one place)
 # ─────────────────────────────────────────────────────────────────────────────
 GEMINI_KEY   = os.getenv("GEMINI_API_KEY", "")
 NEWSAPI_KEY  = os.getenv("NEWSAPI_KEY", "")
-JWT_SECRET   = os.getenv("JWT_SECRET", "sherbyte-local-dev-secret-change-me")
+JWT_SECRET   = os.getenv("JWT_SECRET", "sherbyte-local-dev-secret-CHANGE-ME")
 JWT_ALG      = "HS256"
 JWT_EXP_DAYS = 30
 DB_PATH      = Path("sherbyte.db")
 
 CATEGORIES = ["tech", "society", "economy", "nature", "arts", "selfwell", "philo"]
 
-CATEGORY_KEYWORDS = {
+CATEGORY_KEYWORDS: dict[str, list[str]] = {
     "tech":     ["technology", "ai", "artificial intelligence", "software", "startup",
                  "digital", "cyber", "space", "science", "robot", "chip", "quantum"],
     "society":  ["politics", "government", "election", "law", "court", "social",
@@ -61,10 +78,12 @@ CATEGORY_KEYWORDS = {
                  "consciousness", "meaning", "wisdom", "thought", "debate", "moral"],
 }
 
-RSS_FEEDS = [
+# Plain URLs — NO markdown formatting
+RSS_FEEDS: list[str] = [
     "https://feeds.feedburner.com/ndtvnews-top-stories",
     "https://timesofindia.indiatimes.com/rssfeedstopstories.cms",
     "https://www.thehindu.com/feeder/default.rss",
+    "https://www.hindustantimes.com/feeds/rss/india-news/rssfeed.xml",
     "https://indianexpress.com/section/india/feed/",
     "https://www.livemint.com/rss/news",
     "http://feeds.bbci.co.uk/news/world/asia/india/rss.xml",
@@ -74,7 +93,7 @@ RSS_FEEDS = [
 ]
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 3. DATABASE
+# SECTION 3 — DATABASE
 # ─────────────────────────────────────────────────────────────────────────────
 def get_conn() -> sqlite3.Connection:
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
@@ -128,17 +147,17 @@ def init_db() -> None:
             UNIQUE(user_id, article_id, action)
         );
 
-        CREATE INDEX IF NOT EXISTS idx_articles_cat   ON articles(category);
-        CREATE INDEX IF NOT EXISTS idx_articles_pub   ON articles(published_at DESC);
-        CREATE INDEX IF NOT EXISTS idx_articles_trend ON articles(trending_score DESC);
-        CREATE INDEX IF NOT EXISTS idx_inter_user     ON interactions(user_id);
+        CREATE INDEX IF NOT EXISTS idx_art_cat   ON articles(category);
+        CREATE INDEX IF NOT EXISTS idx_art_pub   ON articles(published_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_art_trend ON articles(trending_score DESC);
+        CREATE INDEX IF NOT EXISTS idx_int_user  ON interactions(user_id);
     """)
     conn.commit()
     conn.close()
-    log.info("DB ready: %s", DB_PATH)
+    log.info("DB ready → %s", DB_PATH.resolve())
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 4. AUTH HELPERS
+# SECTION 4 — AUTH HELPERS
 # ─────────────────────────────────────────────────────────────────────────────
 pwd_ctx  = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security = HTTPBearer(auto_error=False)
@@ -168,21 +187,19 @@ def decode_token(token: str) -> Optional[str]:
 def get_current_user(
     creds: Optional[HTTPAuthorizationCredentials] = Depends(security),
 ) -> Optional[str]:
-    if not creds:
-        return None
-    return decode_token(creds.credentials)
+    return decode_token(creds.credentials) if creds else None
 
 
 def require_user(
     creds: Optional[HTTPAuthorizationCredentials] = Depends(security),
 ) -> str:
-    user_id = get_current_user(creds)
-    if not user_id:
+    uid = get_current_user(creds)
+    if not uid:
         raise HTTPException(status_code=401, detail="Authentication required")
-    return user_id
+    return uid
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 5. PYDANTIC MODELS
+# SECTION 5 — PYDANTIC MODELS
 # ─────────────────────────────────────────────────────────────────────────────
 class RegisterRequest(BaseModel):
     email: str
@@ -198,16 +215,16 @@ class LoginRequest(BaseModel):
 class InteractRequest(BaseModel):
     article_id: str
     category: str
-    action: str        # read | like | save | skip | share | quiz_complete
+    action: str          # read | like | save | skip | share | quiz_complete
     duration_sec: int = 0
 
 
 class OnboardRequest(BaseModel):
-    interests: dict    # {"tech": 0.8, ...}
-    topics: list[str]
+    interests: dict
+    topics: list
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 6. ARTICLE HELPERS
+# SECTION 6 — ARTICLE HELPERS
 # ─────────────────────────────────────────────────────────────────────────────
 def row_to_article(row) -> dict:
     d = dict(row)
@@ -224,8 +241,8 @@ def row_to_article(row) -> dict:
 
 def score_article(article: dict, interests: dict) -> float:
     try:
-        pub_str = article.get("published_at", "") or ""
-        pub = datetime.fromisoformat(pub_str.replace("Z", "+00:00"))
+        pub_str = (article.get("published_at") or "").replace("Z", "+00:00")
+        pub = datetime.fromisoformat(pub_str)
         age_hours = max(1.0, (datetime.now(timezone.utc) - pub).total_seconds() / 3600)
     except Exception:
         age_hours = 24.0
@@ -235,13 +252,15 @@ def score_article(article: dict, interests: dict) -> float:
     return interest * 0.60 + recency * 0.25 + trending * 0.10
 
 
-INTEREST_DELTAS = {
+INTEREST_DELTAS: dict[str, float] = {
     "read": 0.05, "like": 0.10, "save": 0.12,
     "share": 0.08, "skip": -0.03, "quiz_complete": 0.07,
 }
 
 
-def update_interest(conn: sqlite3.Connection, user_id: str, category: str, action: str) -> None:
+def update_interest(
+    conn: sqlite3.Connection, user_id: str, category: str, action: str
+) -> None:
     delta = INTEREST_DELTAS.get(action, 0.0)
     if delta == 0.0:
         return
@@ -254,14 +273,20 @@ def update_interest(conn: sqlite3.Connection, user_id: str, category: str, actio
         interests = {}
     cur = interests.get(category, 0.5)
     interests[category] = round(max(0.05, min(1.0, cur + delta)), 3)
-    conn.execute("UPDATE users SET interests=? WHERE id=?", (json.dumps(interests), user_id))
+    conn.execute(
+        "UPDATE users SET interests=? WHERE id=?",
+        (json.dumps(interests), user_id),
+    )
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 7. NEWS COLLECTION
+# SECTION 7 — NEWS COLLECTION  (RSS + NewsAPI)
 # ─────────────────────────────────────────────────────────────────────────────
 def classify_category(title: str, body: str) -> str:
     text = (title + " " + (body or "")).lower()
-    scores = {cat: sum(1 for kw in kws if kw in text) for cat, kws in CATEGORY_KEYWORDS.items()}
+    scores = {
+        cat: sum(1 for kw in kws if kw in text)
+        for cat, kws in CATEGORY_KEYWORDS.items()
+    }
     best = max(scores, key=scores.get)
     return best if scores[best] > 0 else "society"
 
@@ -272,7 +297,7 @@ def make_article_id(url: str) -> str:
 
 async def fetch_newsapi(client: httpx.AsyncClient) -> list:
     if not NEWSAPI_KEY:
-        log.info("NEWSAPI_KEY not set — skipping NewsAPI")
+        log.info("NEWSAPI_KEY not set — using RSS only")
         return []
     try:
         r = await client.get(
@@ -281,10 +306,15 @@ async def fetch_newsapi(client: httpx.AsyncClient) -> list:
             timeout=10,
         )
         if r.status_code != 200:
+            log.warning("NewsAPI returned %d", r.status_code)
             return []
         result = []
         for a in r.json().get("articles", []):
-            if not a.get("url") or not a.get("title") or "[Removed]" in a.get("title", ""):
+            if (
+                not a.get("url")
+                or not a.get("title")
+                or "[Removed]" in a.get("title", "")
+            ):
                 continue
             result.append({
                 "title":        a["title"],
@@ -294,10 +324,10 @@ async def fetch_newsapi(client: httpx.AsyncClient) -> list:
                 "source_url":   a["url"],
                 "published_at": a.get("publishedAt", ""),
             })
-        log.info("NewsAPI: %d articles", len(result))
+        log.info("NewsAPI → %d articles", len(result))
         return result
     except Exception as exc:
-        log.warning("NewsAPI error: %s", exc)
+        log.warning("NewsAPI fetch error: %s", exc)
         return []
 
 
@@ -320,15 +350,18 @@ async def fetch_rss(client: httpx.AsyncClient) -> list:
                     "published_at": entry.get("published", ""),
                 })
         except Exception as exc:
-            log.debug("RSS %s: %s", feed_url, exc)
-    log.info("RSS: %d articles", len(result))
+            log.debug("RSS skip %s: %s", feed_url, exc)
+    log.info("RSS → %d articles", len(result))
     return result
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 8. GEMINI AI REWRITE
+# SECTION 8 — GEMINI AI REWRITE  (google-genai SDK)
 # ─────────────────────────────────────────────────────────────────────────────
 async def gemini_rewrite(title: str, body: str, category: str):
-    """Returns (preview, body_ai, quiz, word_of_day). Falls back to raw text on any error."""
+    """
+    Returns (preview, body_ai, quiz, word_of_day).
+    Silently falls back to raw text if Gemini key is missing or API fails.
+    """
     preview_default = (body[:200] + "...") if len(body) > 200 else (body or title)
     body_default    = body or title
     quiz_default    = []
@@ -338,42 +371,53 @@ async def gemini_rewrite(title: str, body: str, category: str):
         return preview_default, body_default, quiz_default, word_default
 
     try:
-        genai.configure(api_key=GEMINI_KEY)
-        model  = genai.GenerativeModel("gemini-1.5-flash")
+        client = genai.Client(api_key=GEMINI_KEY)
         prompt = (
-            "You are an AI news editor. Rewrite this article clearly and neutrally.\n\n"
+            "You are an AI news editor writing for an Indian audience. "
+            "Rewrite the article below clearly and neutrally.\n\n"
             f"Title: {title}\n"
             f"Body: {body[:800]}\n"
             f"Category: {category}\n\n"
-            "Respond ONLY with valid JSON — no markdown fences, no extra text:\n"
-            '{"preview":"60-word engaging summary",'
-            '"body_ai":"150-180 word plain-language rewrite",'
-            '"quiz":[{"question":"...","options":["A","B","C","D"],"answer_index":0}],'
-            '"word_of_day":{"word":"...","phonetic":"...","definition":"...","example":"..."}}'
+            "Reply with ONLY a single valid JSON object — no markdown, no code fences:\n"
+            '{"preview":"60-word engaging summary of the article",'
+            '"body_ai":"150-180 word plain-English rewrite",'
+            '"quiz":[{"question":"A question about this article",'
+            '"options":["Option A","Option B","Option C","Option D"],'
+            '"answer_index":0}],'
+            '"word_of_day":{"word":"relevant vocabulary word",'
+            '"phonetic":"/fəˈnetɪk/","definition":"its meaning",'
+            '"example":"a sentence using the word"}}'
         )
-        response = await asyncio.to_thread(model.generate_content, prompt)
+
+        response = await asyncio.to_thread(
+            client.models.generate_content,
+            model="gemini-2.0-flash",
+            contents=prompt,
+        )
+
         text = response.text.strip()
-        # Strip accidental markdown fences
+        # Strip markdown code fences if Gemini wraps response
         if text.startswith("```"):
-            parts = text.split("```")
-            text = parts[1] if len(parts) > 1 else text
-            if text.startswith("json"):
-                text = text[4:]
+            text = text.strip("`").strip()
+            if text.lower().startswith("json"):
+                text = text[4:].strip()
+
         data = json.loads(text)
         return (
-            data.get("preview",      preview_default),
-            data.get("body_ai",      body_default),
-            data.get("quiz",         quiz_default),
-            data.get("word_of_day",  word_default),
+            data.get("preview",     preview_default),
+            data.get("body_ai",     body_default),
+            data.get("quiz",        quiz_default),
+            data.get("word_of_day", word_default),
         )
     except Exception as exc:
         log.warning("Gemini rewrite failed (%s) — using raw text", exc)
         return preview_default, body_default, quiz_default, word_default
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 9. PIPELINE TASKS
+# SECTION 9 — PIPELINE TASKS
 # ─────────────────────────────────────────────────────────────────────────────
 async def collect_news() -> int:
+    """Fetch from all sources, AI-rewrite new articles, save to DB."""
     log.info("[CRON] Starting news collection...")
     async with httpx.AsyncClient() as client:
         news_api_arts, rss_arts = await asyncio.gather(
@@ -381,15 +425,17 @@ async def collect_news() -> int:
             fetch_rss(client),
         )
 
+    all_raw   = news_api_arts + rss_arts
     conn      = get_conn()
     new_count = 0
 
-    for raw in (news_api_arts + rss_arts):
+    for raw in all_raw:
         if not raw.get("title") or not raw.get("source_url"):
             continue
+
         art_id = make_article_id(raw["source_url"])
         if conn.execute("SELECT id FROM articles WHERE id=?", (art_id,)).fetchone():
-            continue
+            continue  # already in DB
 
         category = classify_category(raw["title"], raw.get("body", ""))
         body     = raw.get("body") or raw["title"]
@@ -404,11 +450,17 @@ async def collect_news() -> int:
                 source, source_url, published_at, quiz, word_of_day)
                VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
             (
-                art_id, raw["title"], preview, body_ai,
-                raw.get("image_url", ""), category,
-                raw.get("source", ""), raw.get("source_url", ""),
+                art_id,
+                raw["title"],
+                preview,
+                body_ai,
+                raw.get("image_url", ""),
+                category,
+                raw.get("source", ""),
+                raw.get("source_url", ""),
                 raw.get("published_at", ""),
-                json.dumps(quiz_json), json.dumps(word_json),
+                json.dumps(quiz_json),
+                json.dumps(word_json),
             ),
         )
         new_count += 1
@@ -431,62 +483,72 @@ def update_trending_scores() -> None:
             age_hours = max(1.0, (datetime.now(timezone.utc) - pub).total_seconds() / 3600)
         except Exception:
             age_hours = 24.0
-        score = (row["like_count"] * 2 + row["save_count"] * 3 + row["view_count"] * 0.5) / age_hours
-        conn.execute("UPDATE articles SET trending_score=? WHERE id=?", (score, row["id"]))
+        score = (
+            row["like_count"] * 2
+            + row["save_count"] * 3
+            + row["view_count"] * 0.5
+        ) / age_hours
+        conn.execute(
+            "UPDATE articles SET trending_score=? WHERE id=?", (score, row["id"])
+        )
     conn.commit()
     conn.close()
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 10. APP STARTUP / LIFESPAN
+# SECTION 10 — LIFESPAN  (startup + shutdown hooks)
 # ─────────────────────────────────────────────────────────────────────────────
 scheduler = AsyncIOScheduler()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialise DB and kick off background jobs
+    # 1. Create DB tables if not exist
     init_db()
-    asyncio.create_task(collect_news())          # collect immediately on start
-    scheduler.add_job(collect_news,            "interval", minutes=30, id="collect")
-    scheduler.add_job(update_trending_scores,  "interval", hours=2,    id="trending")
+    # 2. Collect news immediately on startup (background task)
+    asyncio.create_task(collect_news())
+    # 3. Schedule recurring jobs
+    scheduler.add_job(collect_news,           "interval", minutes=30, id="collect")
+    scheduler.add_job(update_trending_scores, "interval", hours=2,    id="trending")
     scheduler.start()
-    log.info("Scheduler started (collect=30 min, trending=2 h)")
-    yield
-    scheduler.shutdown()
+    log.info("Scheduler started — collect every 30 min | trending every 2 h")
+    yield                          # ← app runs here
+    scheduler.shutdown()           # ← called on Render shutdown
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 11. FASTAPI APP + MIDDLEWARE
+# SECTION 11 — FASTAPI APP + MIDDLEWARE
 # ─────────────────────────────────────────────────────────────────────────────
 app = FastAPI(
     title="SherByte API",
-    version="2.0.0",
-    description="AI-powered personalised news",
+    version="2.1.0",
+    description="AI-powered personalised news — India",
     lifespan=lifespan,
 )
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   # Lock down to your domain in production if needed
+    allow_origins=["*"],           # tighten to your Firebase domain in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 12. ROUTES
+# SECTION 12 — ROUTES
 # ─────────────────────────────────────────────────────────────────────────────
 
 # ── Health ────────────────────────────────────────────────────────────────────
 @app.get("/health")
 def health():
-    return {"status": "ok", "version": "2.0.0", "db": DB_PATH.exists()}
+    return {"status": "ok", "version": "2.1.0", "db": DB_PATH.exists()}
 
 
 # ── Auth ──────────────────────────────────────────────────────────────────────
 @app.post("/auth/register")
 def register(req: RegisterRequest):
     conn = get_conn()
-    if conn.execute("SELECT id FROM users WHERE email=?", (req.email,)).fetchone():
+    if conn.execute(
+        "SELECT id FROM users WHERE email=?", (req.email.lower().strip(),)
+    ).fetchone():
         conn.close()
         raise HTTPException(400, "Email already registered")
     user_id = str(uuid.uuid4())
@@ -506,8 +568,8 @@ def register(req: RegisterRequest):
 
 @app.post("/auth/login")
 def login(req: LoginRequest):
-    conn  = get_conn()
-    user  = conn.execute(
+    conn = get_conn()
+    user = conn.execute(
         "SELECT * FROM users WHERE email=?", (req.email.lower().strip(),)
     ).fetchone()
     conn.close()
@@ -522,18 +584,23 @@ def login(req: LoginRequest):
 
 # ── Feed ──────────────────────────────────────────────────────────────────────
 @app.get("/feed")
-def get_feed(page: int = 1, user_id: Optional[str] = Depends(get_current_user)):
+def get_feed(
+    page: int = 1,
+    user_id: Optional[str] = Depends(get_current_user),
+):
     conn      = get_conn()
     interests = {c: 0.5 for c in CATEGORIES}
     if user_id:
-        row = conn.execute("SELECT interests FROM users WHERE id=?", (user_id,)).fetchone()
+        row = conn.execute(
+            "SELECT interests FROM users WHERE id=?", (user_id,)
+        ).fetchone()
         if row:
             try:
                 interests = json.loads(row["interests"])
             except Exception:
                 pass
 
-    rows     = conn.execute(
+    rows = conn.execute(
         "SELECT * FROM articles WHERE is_published=1 ORDER BY created_at DESC LIMIT 200"
     ).fetchall()
     conn.close()
@@ -581,11 +648,15 @@ def get_explore(category: Optional[str] = None, page: int = 1):
 @app.get("/article/{article_id}")
 def get_article(article_id: str):
     conn = get_conn()
-    row  = conn.execute("SELECT * FROM articles WHERE id=?", (article_id,)).fetchone()
+    row  = conn.execute(
+        "SELECT * FROM articles WHERE id=?", (article_id,)
+    ).fetchone()
     if not row:
         conn.close()
         raise HTTPException(404, "Article not found")
-    conn.execute("UPDATE articles SET view_count=view_count+1 WHERE id=?", (article_id,))
+    conn.execute(
+        "UPDATE articles SET view_count=view_count+1 WHERE id=?", (article_id,)
+    )
     conn.commit()
     conn.close()
     return row_to_article(row)
@@ -603,11 +674,13 @@ def interact(req: InteractRequest, user_id: str = Depends(require_user)):
         )
         if req.action == "like":
             conn.execute(
-                "UPDATE articles SET like_count=like_count+1 WHERE id=?", (req.article_id,)
+                "UPDATE articles SET like_count=like_count+1 WHERE id=?",
+                (req.article_id,),
             )
         elif req.action == "save":
             conn.execute(
-                "UPDATE articles SET save_count=save_count+1 WHERE id=?", (req.article_id,)
+                "UPDATE articles SET save_count=save_count+1 WHERE id=?",
+                (req.article_id,),
             )
         update_interest(conn, user_id, req.category, req.action)
         conn.commit()
@@ -660,11 +733,14 @@ def onboard(req: OnboardRequest, user_id: str = Depends(require_user)):
 def get_bookmarks(user_id: str = Depends(require_user)):
     conn     = get_conn()
     saved    = conn.execute(
-        "SELECT article_id FROM interactions WHERE user_id=? AND action='save'", (user_id,)
+        "SELECT article_id FROM interactions WHERE user_id=? AND action='save'",
+        (user_id,),
     ).fetchall()
     articles = []
     for s in saved:
-        row = conn.execute("SELECT * FROM articles WHERE id=?", (s["article_id"],)).fetchone()
+        row = conn.execute(
+            "SELECT * FROM articles WHERE id=?", (s["article_id"],)
+        ).fetchone()
         if row:
             articles.append(row_to_article(row))
     conn.close()
@@ -679,8 +755,8 @@ def search(q: str = ""):
     conn = get_conn()
     like = f"%{q}%"
     rows = conn.execute(
-        "SELECT * FROM articles WHERE (title LIKE ? OR preview LIKE ?) "
-        "AND is_published=1 LIMIT 20",
+        "SELECT * FROM articles "
+        "WHERE (title LIKE ? OR preview LIKE ?) AND is_published=1 LIMIT 20",
         (like, like),
     ).fetchall()
     conn.close()
@@ -712,22 +788,17 @@ def admin_trending():
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 13. ENTRY POINT
+# SECTION 13 — ENTRY POINT
 # ─────────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     import uvicorn
-
-    print("""
+    port = int(os.getenv("PORT", 8000))
+    print(f"""
 ╔══════════════════════════════════════════╗
-║         ⚡ SherByte Backend v2.0         ║
+║        ⚡ SherByte Backend v2.1          ║
 ╠══════════════════════════════════════════╣
-║  API Docs → http://localhost:8000/docs   ║
-║  Health   → http://localhost:8000/health ║
+║  Docs   → http://localhost:{port}/docs    ║
+║  Health → http://localhost:{port}/health  ║
 ╚══════════════════════════════════════════╝
-
-.env keys needed:
-  GEMINI_API_KEY  → aistudio.google.com   (required for AI rewrite)
-  JWT_SECRET      → any long random string (required)
-  NEWSAPI_KEY     → newsapi.org            (optional, RSS works without it)
-""")
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=False)
+    """)
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=False)
