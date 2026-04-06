@@ -42,14 +42,14 @@
   --nh: 74px;
   --r:  20px;
 
-  /* VIBGYOR accents */
-  --c-red:    #FF5B5B;
-  --c-orange: #FF8C42;
-  --c-yellow: #FFD166;
-  --c-green:  #52C17A;
-  --c-blue:   #4F6BD4;
-  --c-indigo: #7B8FE8;
-  --c-violet: #A855F7;
+  /* VIBGYOR accents — exact SherByte spec */
+  --c-red:    #E53935;
+  --c-orange: #FB8C00;
+  --c-yellow: #FBC02D;
+  --c-green:  #43A047;
+  --c-blue:   #1E88E5;
+  --c-indigo: #3949AB;
+  --c-violet: #8E24AA;
 }
 
 [data-theme="dark"] {
@@ -392,26 +392,23 @@ header {
 .chip:active { transform: scale(0.88); }
 .chip.on { color: #fff; border-color: transparent; box-shadow: 0 4px 16px rgba(44,61,143,0.4); }
 
-/* ─── News Card — Glass Style ─── */
+/* ─── News Card — Free Editorial Style (no boxes) ─── */
 .nc {
-  margin: 10px 14px;
-  border-radius: var(--r);
-  background: var(--glass2);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid var(--line);
+  margin: 0 0 0 0;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line2);
+  background: transparent;
   overflow: hidden;
   cursor: pointer;
-  transition: transform 0.2s var(--spring), box-shadow 0.2s;
-  box-shadow:
-    0 4px 24px rgba(0,0,0,0.15),
-    inset 0 1px 0 rgba(255,255,255,0.05);
+  transition: background 0.15s;
+  position: relative;
 }
-.nc:active { transform: scale(0.98); box-shadow: 0 2px 12px rgba(0,0,0,0.2); }
+.nc:active { background: var(--bgcard); }
+.nc:last-child { border-bottom: none; }
 
 .nc-meta {
   display: flex; align-items: center; gap: 7px;
-  padding: 12px 14px 0;
+  padding: 0 0 8px;
 }
 .nc-src-ico {
   width: 18px; height: 18px; border-radius: 6px; overflow: hidden;
@@ -428,11 +425,11 @@ header {
 }
 .nc-body {
   display: flex; gap: 12px; align-items: flex-start;
-  padding: 10px 14px 0;
+  padding: 0 0 10px;
 }
 .nc-text { flex: 1; }
 .nc-title {
-  font-size: 0.92rem; font-weight: 700; line-height: 1.35;
+  font-size: 0.94rem; font-weight: 700; line-height: 1.35;
   letter-spacing: -0.2px; color: var(--t1); margin-bottom: 5px;
 }
 .nc-desc {
@@ -443,11 +440,10 @@ header {
 .nc-img {
   width: 86px; height: 64px; border-radius: 12px; object-fit: cover;
   flex-shrink: 0; background: var(--bg3);
-  border: 1px solid var(--line);
 }
 .nc-acts {
   display: flex; align-items: center; gap: 2px;
-  margin: 10px 14px; padding-top: 10px;
+  padding-top: 8px;
   border-top: 1px solid var(--line2);
 }
 .nc-act {
@@ -462,6 +458,59 @@ header {
 .nc-act.acc { color: var(--accent); }
 .nc-act i { font-size: 0.88rem; }
 .nc-sp { flex: 1; }
+
+/* ─── Top News Bulletin (between articles) ─── */
+.feed-bulletin {
+  margin: 0;
+  padding: 14px 16px;
+  background: linear-gradient(90deg, rgba(30,136,229,0.10) 0%, transparent 100%);
+  border-top: 2px solid var(--c-blue);
+  border-bottom: 1px solid var(--line2);
+}
+.feed-bulletin-lbl {
+  font-size: 0.58rem; font-weight: 800; letter-spacing: 2px;
+  color: var(--c-blue); text-transform: uppercase; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 5px;
+}
+.feed-bulletin-lbl::before { content:''; width:6px;height:6px;border-radius:50%;background:var(--c-blue);animation:livePulse 1.2s infinite; }
+.feed-bulletin-item {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 7px 0; border-bottom: 1px solid var(--line2);
+  cursor: pointer; transition: opacity 0.12s;
+}
+.feed-bulletin-item:last-child { border-bottom: none; }
+.feed-bulletin-item:active { opacity: 0.6; }
+.fbi-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--c-blue); flex-shrink: 0; margin-top: 6px; }
+.fbi-title { font-size: 0.82rem; font-weight: 600; color: var(--t1); line-height: 1.35; }
+.fbi-src { font-size: 0.62rem; color: var(--t3); margin-top: 2px; }
+
+/* ─── Latest News Headlines (CNBC style) ─── */
+.feed-latest-news {
+  margin: 0;
+  padding: 12px 16px 6px;
+  border-top: 1px solid var(--line2);
+  border-bottom: 1px solid var(--line2);
+  background: var(--bgcard);
+}
+.fln-header {
+  font-size: 0.7rem; font-weight: 900; letter-spacing: 1.5px;
+  color: var(--c-blue); text-transform: uppercase; margin-bottom: 10px;
+  display: flex; align-items: center; gap: 6px;
+}
+.fln-header i { font-size: 0.7rem; }
+.fln-item {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 8px 0; border-bottom: 1px solid var(--line2);
+  cursor: pointer; transition: opacity 0.12s;
+}
+.fln-item:last-child { border-bottom: none; padding-bottom: 0; }
+.fln-item:active { opacity: 0.6; }
+.fln-time { font-size: 0.56rem; font-weight: 700; color: var(--c-blue); white-space: nowrap; margin-top: 3px; min-width: 52px; }
+.fln-title { font-size: 0.8rem; font-weight: 600; color: var(--t1); line-height: 1.35; flex: 1; }
+.fln-src { font-size: 0.6rem; color: var(--t3); margin-top: 2px; }
+
+/* ─── Feed section wrapper ─── */
+.feed-section { background: var(--bg); }
 
 @keyframes heartPop {
   0%{transform:scale(1)} 40%{transform:scale(1.4)} 70%{transform:scale(0.85)} 100%{transform:scale(1)}
@@ -634,6 +683,7 @@ header {
   padding: 0 18px; font-size: 0.68rem; font-weight: 600;
   font-family: 'Space Grotesk', monospace;
   border-right: 1px solid var(--line);
+  color: #ffffff;
 }
 .tick-up { color: #52C17A; font-size: 0.6rem; }
 .tick-dn { color: #FF5B5B; font-size: 0.6rem; }
@@ -1342,6 +1392,77 @@ nav.hidden { transform: translateX(-50%) translateY(110px); opacity: 0; pointer-
   letter-spacing: 0.3px;
 }
 
+/* ─── FEED Edit Modal ─── */
+.feed-edit-modal {
+  position: absolute; inset: 0; z-index: 3000;
+  background: rgba(0,0,0,0.75); backdrop-filter: blur(8px);
+  display: none; align-items: flex-end; justify-content: center;
+  padding-bottom: 0;
+}
+.feed-edit-modal.open { display: flex; }
+.fem-sheet {
+  background: var(--bg1); width: 100%; max-width: 440px;
+  border-radius: 24px 24px 0 0; border: 1px solid var(--line);
+  border-bottom: none; padding: 20px 16px 32px;
+  max-height: 90vh; overflow-y: auto;
+  animation: sheetUp 0.35s var(--snap) both;
+}
+@keyframes sheetUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+.fem-handle { width: 36px; height: 4px; border-radius: 100px; background: var(--line); margin: 0 auto 16px; }
+.fem-title {
+  font-family: var(--fd); font-size: 1rem; font-weight: 800;
+  color: var(--t1); margin-bottom: 4px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.fem-sub { font-size: 0.72rem; color: var(--t3); margin-bottom: 16px; }
+.fem-cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+.fem-cat-btn {
+  padding: 12px 10px; border-radius: 14px; border: 2px solid var(--line2);
+  cursor: pointer; text-align: center; transition: all 0.15s var(--spring);
+  position: relative;
+}
+.fem-cat-btn.on { border-width: 2px; }
+.fem-cat-btn:active { transform: scale(0.95); }
+.fem-cat-ico { font-size: 1.4rem; margin-bottom: 4px; }
+.fem-cat-name { font-size: 0.76rem; font-weight: 700; color: #fff; }
+.fem-sec-lbl { font-size: 0.62rem; font-weight: 700; color: var(--t3); letter-spacing: 1px; text-transform: uppercase; margin: 12px 0 8px; }
+.fem-topics-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+.fem-topic {
+  padding: 5px 12px; border-radius: 100px; border: 1px solid var(--line);
+  font-size: 0.7rem; font-weight: 600; cursor: pointer; transition: all 0.15s;
+  color: var(--t2);
+}
+.fem-topic.on { background: var(--accent); color: #fff; border-color: transparent; }
+.fem-save-btn {
+  width: 100%; padding: 12px; border-radius: 14px; border: none;
+  background: linear-gradient(135deg, var(--p-blue), var(--p-blue3));
+  color: #fff; font-family: var(--f); font-size: 0.9rem; font-weight: 700;
+  cursor: pointer; box-shadow: 0 4px 16px rgba(44,61,143,0.4);
+  transition: transform 0.15s;
+}
+.fem-save-btn:active { transform: scale(0.97); }
+
+/* ─── Edit Profile Modal ─── */
+.edit-profile-modal {
+  position: absolute; inset: 0; z-index: 3000;
+  background: rgba(0,0,0,0.75); backdrop-filter: blur(8px);
+  display: none; align-items: flex-end; justify-content: center;
+}
+.edit-profile-modal.open { display: flex; }
+.epm-sheet {
+  background: var(--bg1); width: 100%; max-width: 440px;
+  border-radius: 24px 24px 0 0; border: 1px solid var(--line);
+  border-bottom: none; padding: 20px 16px 36px;
+  max-height: 90vh; overflow-y: auto;
+  animation: sheetUp 0.35s var(--snap) both;
+}
+.epm-input {
+  width: 100%; padding: 10px 14px; margin-bottom: 10px;
+  background: var(--bg2); border: 1px solid var(--line);
+  border-radius: 12px; color: var(--t1); font-size: 0.84rem;
+  font-family: var(--f); outline: none; transition: border 0.15s;
+}
+.epm-input:focus { border-color: var(--accent); }
 /* Explore header: hide notif, show search */
 #v-explore .hdr-explore-notif { display: none !important; }
 
@@ -1382,10 +1503,10 @@ nav.hidden { transform: translateX(-50%) translateY(110px); opacity: 0; pointer-
 <!-- SIDEBAR -->
 <div class="sidebar" id="sidebar">
   <div class="sb-head">
-    <div class="sb-ava"><img src="https://i.pravatar.cc/100?img=12" alt=""></div>
+    <div class="sb-ava"><img src="https://i.pravatar.cc/100?img=12" alt="" id="sb-ava-img"></div>
     <div>
-      <div class="sb-name">Jashwanth Chowhan</div>
-      <div class="sb-handle">@jashwanth1621 · Verified ✦</div>
+      <div class="sb-name" id="sb-name">SherByte User</div>
+      <div class="sb-handle" id="sb-handle">@user ✦</div>
     </div>
     <div class="sb-close tap" onclick="sbClose()"><i class="fa-solid fa-xmark"></i></div>
   </div>
@@ -1406,7 +1527,7 @@ nav.hidden { transform: translateX(-50%) translateY(110px); opacity: 0; pointer-
   </div>
   <div class="sb-foot">
     <div class="sb-logout tap"><i class="fa-solid fa-right-from-bracket"></i> Log Out</div>
-    <div class="sb-ver">SherrByte v21 · Mobile · Build 2026.04</div>
+    <div class="sb-ver">SherrByte v22 · Mobile · Build 2026.04</div>
   </div>
 </div>
 
@@ -1446,7 +1567,7 @@ nav.hidden { transform: translateX(-50%) translateY(110px); opacity: 0; pointer-
 <!-- ════════ HOME ════════ -->
 <div id="v-home" class="view active">
   <div class="chips" id="chip-row">
-    <div class="chip on tap" onclick="selectChip(this,'all')" style="background:var(--p-blue)">All</div>
+    <div class="chip on tap" onclick="selectChip(this,'all')" style="background:#1E88E5">All</div>
     <div class="chip tap" onclick="selectChip(this,'arts')">🎭 Arts & Culture</div>
     <div class="chip tap" onclick="selectChip(this,'selfwell')">🧘 Well-being</div>
     <div class="chip tap" onclick="selectChip(this,'economy')">💼 Business</div>
@@ -1493,22 +1614,9 @@ nav.hidden { transform: translateX(-50%) translateY(110px); opacity: 0; pointer-
 
 <!-- ════════ EXPLORE ════════ -->
 <div id="v-explore" class="view">
-  <div class="live-ticker">
-    <div class="ticker-inner">
-      <span class="tick-item"><span style="color:#52C17A">NIFTY</span> 22,580 <span class="tick-up">▲ +1.1%</span></span>
-      <span class="tick-item"><span style="color:#FFD166">GOLD</span> ₹72,450 <span class="tick-up">▲ +0.4%</span></span>
-      <span class="tick-item"><span style="color:#ABB0C2">SILVER</span> ₹88,200 <span class="tick-dn">▼ −0.2%</span></span>
-      <span class="tick-item"><span style="color:#4F6BD4">BSE</span> 73,088 <span class="tick-up">▲ +0.6%</span></span>
-      <span class="tick-item"><span style="color:#A855F7">NASDAQ</span> 16,274 <span class="tick-up">▲ +0.8%</span></span>
-      <span class="tick-item"><span style="color:#FF5B5B">CRUDE</span> $82.4/bbl <span class="tick-dn">▼ −1.2%</span></span>
-      <span class="tick-item"><span style="color:#FF8C42">USD/INR</span> ₹83.42 <span class="tick-dn">▼ −0.1%</span></span>
-      <span class="tick-item"><span style="color:#52C17A">NIFTY</span> 22,580 <span class="tick-up">▲ +1.1%</span></span>
-      <span class="tick-item"><span style="color:#FFD166">GOLD</span> ₹72,450 <span class="tick-up">▲ +0.4%</span></span>
-      <span class="tick-item"><span style="color:#ABB0C2">SILVER</span> ₹88,200 <span class="tick-dn">▼ −0.2%</span></span>
-      <span class="tick-item"><span style="color:#4F6BD4">BSE</span> 73,088 <span class="tick-up">▲ +0.6%</span></span>
-      <span class="tick-item"><span style="color:#A855F7">NASDAQ</span> 16,274 <span class="tick-up">▲ +0.8%</span></span>
-      <span class="tick-item"><span style="color:#FF5B5B">CRUDE</span> $82.4/bbl <span class="tick-dn">▼ −1.2%</span></span>
-      <span class="tick-item"><span style="color:#FF8C42">USD/INR</span> ₹83.42 <span class="tick-dn">▼ −0.1%</span></span>
+  <div class="live-ticker" id="live-ticker">
+    <div class="ticker-inner" id="ticker-inner">
+      <span class="tick-item">⚡ Loading live data...</span>
     </div>
   </div>
 
@@ -1530,24 +1638,24 @@ nav.hidden { transform: translateX(-50%) translateY(110px); opacity: 0; pointer-
     <div class="exp-sec-hdr-title">📊 At a Glance</div>
   </div>
   <div class="exp-bento">
-    <div class="bento-weather tap" onclick="toast('🌤 Kochi weather details')">
+    <div class="bento-weather tap" id="bento-weather" onclick="toast('🌤 Fetching weather...')">
       <div>
-        <div class="bw-loc"><i class="fa-solid fa-location-dot" style="font-size:0.6rem"></i> Kochi, Kerala</div>
-        <div class="bw-temp">31°</div>
-        <div class="bw-desc">Partly cloudy · Feels 34°</div>
+        <div class="bw-loc" id="bw-loc"><i class="fa-solid fa-location-dot" style="font-size:0.6rem"></i> Loading...</div>
+        <div class="bw-temp" id="bw-temp">--°</div>
+        <div class="bw-desc" id="bw-desc">Fetching weather...</div>
       </div>
-      <div class="bw-icon">⛅</div>
+      <div class="bw-icon" id="bw-icon">🌤</div>
     </div>
-    <div class="bento-card tap" onclick="toast('📈 Markets detail')">
-      <div class="bc-lbl">Markets</div>
+    <div class="bento-card tap" id="bento-markets" onclick="toast('📈 Live markets')">
+      <div class="bc-lbl">MARKETS (LIVE)</div>
       <div class="bc-name">NIFTY 50</div>
-      <div class="bc-val" style="color:#52C17A">22,580</div>
-      <div class="bc-chg" style="color:#52C17A">▲ +1.12% today</div>
-      <div class="bc-bar"><div class="bc-bar-fill" style="width:72%;background:linear-gradient(90deg,var(--p-blue),#52C17A)"></div></div>
+      <div class="bc-val" id="bm-nifty-val" style="color:#52C17A">--</div>
+      <div class="bc-chg" id="bm-nifty-chg" style="color:#52C17A">Loading...</div>
+      <div class="bc-bar"><div class="bc-bar-fill" id="bm-nifty-bar" style="width:50%;background:linear-gradient(90deg,var(--p-blue),#52C17A)"></div></div>
       <div class="bc-div"></div>
       <div class="bc-name">SENSEX</div>
-      <div class="bc-val" style="color:#52C17A">73,088</div>
-      <div class="bc-chg" style="color:#52C17A">▲ +0.6%</div>
+      <div class="bc-val" id="bm-sensex-val" style="color:#52C17A">--</div>
+      <div class="bc-chg" id="bm-sensex-chg" style="color:#52C17A">Loading...</div>
     </div>
     <!-- IPL Scoreboard -->
     <div class="bento-card tap" onclick="toast('🏏 Full IPL scorecard')">
@@ -1559,8 +1667,16 @@ nav.hidden { transform: translateX(-50%) translateY(110px); opacity: 0; pointer-
       <div style="font-size:0.6rem;color:var(--t3);margin-top:4px">Target: 204 · Need 17 off 10</div>
     </div>
     <!-- Gold & Silver -->
-    <div class="bento-card tap" onclick="toast('🥇 Commodity prices')">
-      <div class="bc-lbl">Commodities</div>
+    <div class="bento-card tap" id="bento-commodities" onclick="toast('🥇 Commodity prices')">
+      <div class="bc-lbl">COMMODITIES</div>
+      <div class="bc-name">Gold (per oz)</div>
+      <div class="bc-val" id="bm-gold-val" style="color:#FBC02D">--</div>
+      <div class="bc-chg" id="bm-gold-chg" style="color:#52C17A">Loading...</div>
+      <div class="bc-div"></div>
+      <div class="bc-name">Crude Oil</div>
+      <div class="bc-val" id="bm-oil-val" style="color:#FB8C00">--</div>
+      <div class="bc-chg" id="bm-oil-chg" style="color:#52C17A">Loading...</div>
+    </div>
       <div class="bc-name">Gold</div>
       <div class="bc-val" style="color:#FFD166">₹72,450</div>
       <div class="bc-chg" style="color:#52C17A">▲ +0.4% /10g</div>
@@ -1600,21 +1716,24 @@ nav.hidden { transform: translateX(-50%) translateY(110px); opacity: 0; pointer-
 <div id="v-profile" class="view" style="overflow-y:scroll;">
   <div class="prof-hero">
     <div class="prof-row">
-      <div class="prof-ava"><img src="https://i.pravatar.cc/200?img=12" alt=""></div>
+      <div class="prof-ava" id="prof-ava-wrap" onclick="openEditProfile()" style="cursor:pointer;position:relative;">
+        <img src="https://i.pravatar.cc/200?img=12" alt="" id="prof-ava-img">
+        <div style="position:absolute;bottom:0;right:0;width:20px;height:20px;border-radius:50%;background:var(--p-blue);display:flex;align-items:center;justify-content:center;font-size:0.5rem;color:#fff;border:2px solid var(--bg)"><i class="fa-solid fa-pen"></i></div>
+      </div>
       <div class="prof-info">
-        <div class="prof-name">Jashwanth Chowhan</div>
-        <div class="prof-handle">@jashwanth1621 · Verified ✦</div>
-        <div class="prof-bio">Tech enthusiast & news junkie. Building things. 🇮🇳</div>
+        <div class="prof-name" id="prof-name">—</div>
+        <div class="prof-handle" id="prof-handle">@— ✦</div>
+        <div class="prof-bio" id="prof-bio">Tap Edit Profile to set your bio</div>
       </div>
     </div>
     <div class="prof-stats">
-      <div class="ps"><div class="ps-n">128</div><div class="ps-l">Followers</div></div>
-      <div class="ps"><div class="ps-n">45</div><div class="ps-l">Following</div></div>
-      <div class="ps"><div class="ps-n">18</div><div class="ps-l">Friends</div></div>
+      <div class="ps"><div class="ps-n" id="prof-followers">0</div><div class="ps-l">Followers</div></div>
+      <div class="ps"><div class="ps-n" id="prof-following">0</div><div class="ps-l">Following</div></div>
+      <div class="ps"><div class="ps-n" id="prof-friends">0</div><div class="ps-l">Friends</div></div>
       <div class="ps"><div class="ps-n" id="saved-ct">0</div><div class="ps-l">Saved</div></div>
     </div>
     <div class="prof-btns">
-      <button class="pb pb-sec tap" onclick="toast('✏️ Edit profile')">Edit Profile</button>
+      <button class="pb pb-sec tap" onclick="openEditProfile()">Edit Profile</button>
       <button class="pb pb-sec tap" onclick="toast('🔗 Link copied')"><i class="fa-solid fa-share-nodes"></i></button>
       <button class="pb pb-feed tap" onclick="navTo('feed')"><i class="fa-solid fa-wave-square"></i> FEED</button>
     </div>
@@ -1658,7 +1777,10 @@ nav.hidden { transform: translateX(-50%) translateY(110px); opacity: 0; pointer-
 <!-- ════════ FEED PULSE ════════ -->
 <div id="v-feed" class="view">
   <div class="feed-filter-strip">
-    <div class="feed-filter-strip-title">⚡ FEED Pulse</div>
+    <div class="feed-filter-strip-title" style="display:flex;align-items:center;justify-content:space-between">
+      <span>⚡ FEED Pulse</span>
+      <span onclick="openFeedEditModal()" style="font-size:0.68rem;color:var(--accent);font-weight:700;cursor:pointer;padding:4px 10px;border:1px solid var(--accent);border-radius:100px">Edit</span>
+    </div>
     <div class="feed-filter-chips" id="feed-filter-chips"></div>
   </div>
   <div style="overflow-y:scroll;height:calc(100% - 72px);padding-bottom:16px;">
@@ -1697,18 +1819,18 @@ nav.hidden { transform: translateX(-50%) translateY(110px); opacity: 0; pointer-
         <circle cx="130" cy="147" r="3" fill="#FF5B5B"/>
         <circle cx="100" cy="167" r="3" fill="#52C17A"/>
         <circle cx="92" cy="93" r="3" fill="#A855F7"/>
-        <text x="130" y="27" text-anchor="middle" fill="#7B8FE8" font-size="9" font-weight="700" font-family="Poppins,sans-serif">Sci&amp;Tech</text>
-        <text x="213" y="72" text-anchor="start" fill="#4F6BD4" font-size="9" font-weight="700" font-family="Poppins,sans-serif">Society</text>
-        <text x="209" y="164" text-anchor="start" fill="#FFD166" font-size="9" font-weight="700" font-family="Poppins,sans-serif">Business</text>
-        <text x="130" y="215" text-anchor="middle" fill="#FF5B5B" font-size="9" font-weight="700" font-family="Poppins,sans-serif">Arts</text>
-        <text x="48" y="164" text-anchor="end" fill="#52C17A" font-size="9" font-weight="700" font-family="Poppins,sans-serif">Nature</text>
-        <text x="51" y="72" text-anchor="end" fill="#A855F7" font-size="9" font-weight="700" font-family="Poppins,sans-serif">Philo</text>
+        <text x="130" y="27" text-anchor="middle" fill="#3949AB" font-size="9" font-weight="700" font-family="Poppins,sans-serif">Sci&amp;Tech</text>
+        <text x="213" y="72" text-anchor="start" fill="#1E88E5" font-size="9" font-weight="700" font-family="Poppins,sans-serif">Society</text>
+        <text x="209" y="164" text-anchor="start" fill="#FBC02D" font-size="9" font-weight="700" font-family="Poppins,sans-serif">Business</text>
+        <text x="130" y="215" text-anchor="middle" fill="#E53935" font-size="9" font-weight="700" font-family="Poppins,sans-serif">Arts</text>
+        <text x="48" y="164" text-anchor="end" fill="#43A047" font-size="9" font-weight="700" font-family="Poppins,sans-serif">Nature</text>
+        <text x="51" y="72" text-anchor="end" fill="#8E24AA" font-size="9" font-weight="700" font-family="Poppins,sans-serif">Philo</text>
       </svg>
     </div>
     <div style="padding:0 14px 6px;font-family:var(--fd);font-size:0.88rem;font-weight:700;color:var(--t1)">Your Categories</div>
     <div class="feed-cats-grid" id="feed-cats-grid"></div>
     <div class="feed-topics-wrap">
-      <div class="feed-topics-hdr">Topics <span onclick="toast('✓ Topics updated')">Edit</span></div>
+      <div class="feed-topics-hdr">Topics <span onclick="openFeedEditModal()">Edit</span></div>
       <div class="feed-topics" id="feed-topics"></div>
     </div>
     <div style="padding:0 14px 6px;margin-top:8px;font-family:var(--fd);font-size:0.88rem;font-weight:700;color:var(--t1)">Today's Picks</div>
@@ -1774,7 +1896,43 @@ nav.hidden { transform: translateX(-50%) translateY(110px); opacity: 0; pointer-
       <div class="sg-row tap" onclick="toast('💬 Opening chat...')"><div class="sg-ico" style="background:#52C17A"><i class="fa-solid fa-headset"></i></div><span class="sg-lbl2">Live Chat Support</span><i class="fa-solid fa-chevron-right sg-arr"></i></div>
       <div class="sg-row tap" onclick="toast('📧 support@sherbyte.in')"><div class="sg-ico" style="background:#A855F7"><i class="fa-solid fa-envelope"></i></div><span class="sg-lbl2">Email Support</span><i class="fa-solid fa-chevron-right sg-arr"></i></div>
     </div></div>
-    <div style="text-align:center;padding:24px 0;font-size:0.72rem;color:var(--t3)">SherrByte v21 · Mobile<br>Build 2026.04.03</div>
+    <div style="text-align:center;padding:24px 0;font-size:0.72rem;color:var(--t3)">SherrByte v22 · Mobile<br>Build 2026.04.06</div>
+  </div>
+</div>
+
+<!-- ════════ FEED EDIT MODAL ════════ -->
+<div class="feed-edit-modal" id="feed-edit-modal" onclick="closeFeedEditModal(event)">
+  <div class="fem-sheet" onclick="event.stopPropagation()">
+    <div class="fem-handle"></div>
+    <div class="fem-title">Edit Your FEED <span onclick="closeFeedEditModal()" style="font-size:1.2rem;cursor:pointer;color:var(--t3)">✕</span></div>
+    <div class="fem-sub">Choose your 7 interest categories and specific topics</div>
+    <div class="fem-cat-grid" id="fem-cat-grid"></div>
+    <div class="fem-sec-lbl">Topics</div>
+    <div class="fem-topics-grid" id="fem-topics-grid"></div>
+    <button class="fem-save-btn" onclick="saveFeedEdit()">Save Preferences</button>
+  </div>
+</div>
+
+<!-- ════════ EDIT PROFILE MODAL ════════ -->
+<div class="edit-profile-modal" id="edit-profile-modal" onclick="closeEditProfile(event)">
+  <div class="epm-sheet" onclick="event.stopPropagation()">
+    <div class="fem-handle"></div>
+    <div class="fem-title">Edit Profile <span onclick="closeEditProfile()" style="font-size:1.2rem;cursor:pointer;color:var(--t3)">✕</span></div>
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="width:72px;height:72px;border-radius:50%;overflow:hidden;margin:0 auto 8px;border:3px solid var(--accent);cursor:pointer" onclick="toast('📷 Photo upload coming soon')">
+        <img id="epm-ava" src="https://i.pravatar.cc/200?img=12" style="width:100%;height:100%;object-fit:cover">
+      </div>
+      <div style="font-size:0.7rem;color:var(--accent);cursor:pointer" onclick="toast('📷 Photo upload coming soon')">Change Photo</div>
+    </div>
+    <div class="epm-lbl">Display Name</div>
+    <input class="epm-input" id="epm-name" type="text" placeholder="Your name">
+    <div class="epm-lbl">Username</div>
+    <input class="epm-input" id="epm-username" type="text" placeholder="@username">
+    <div class="epm-lbl">Bio</div>
+    <textarea class="epm-input" id="epm-bio" rows="3" placeholder="Tell your story..." style="resize:none"></textarea>
+    <div class="epm-lbl">Website / Link</div>
+    <input class="epm-input" id="epm-link" type="url" placeholder="https://yoursite.com">
+    <button class="fem-save-btn" onclick="saveProfile()" style="margin-top:8px">Save Profile</button>
   </div>
 </div>
 
@@ -1801,7 +1959,7 @@ nav.hidden { transform: translateX(-50%) translateY(110px); opacity: 0; pointer-
 ══════════════════════════════════════════ */
 
 // ── CONFIG ──────────────────────────────────────────────────────────────
-const API_URL = "https://sherrbyte-v2-0.onrender.com";
+const API_URL = "https://sherrbyte-v2-0-1.onrender.com";
 
 // ── STATE ──
 let ST = { likes:[], saves:[], token:null, userId:null, interests:{} };
@@ -1824,15 +1982,15 @@ async function api(path, opts = {}) {
   return res.json();
 }
 
-// ── CATEGORY CONFIG ──
+// ── CATEGORY CONFIG — VIBGYOR exact hex ──
 const CATS = {
-  arts:    { hex:'#FF5B5B', bg:'rgba(255,91,91,0.12)',    label:'Arts, Culture & Recreation', icon:'🎭', short:'Arts' },
-  selfwell:{ hex:'#FF8C42', bg:'rgba(255,140,66,0.12)',   label:'The Self & Well-being',       icon:'🧘', short:'Well-being' },
-  economy: { hex:'#FFD166', bg:'rgba(255,209,102,0.12)',  label:'Business & Economy',          icon:'💼', short:'Business' },
-  nature:  { hex:'#52C17A', bg:'rgba(82,193,122,0.12)',   label:'The Natural World',           icon:'🌿', short:'Nature' },
-  society: { hex:'#E0574F', bg:'rgba(224,87,79,0.12)',    label:'Society & Politics',          icon:'🏛', short:'Society' },
-  tech:    { hex:'#00C2CC', bg:'rgba(0,194,204,0.12)',    label:'Science & Technology',        icon:'🔬', short:'Sci & Tech' },
-  philo:   { hex:'#A855F7', bg:'rgba(168,85,247,0.12)',   label:'Philosophy & Ideas',          icon:'🔮', short:'Philosophy' },
+  arts:    { hex:'#E53935', bg:'rgba(229,57,53,0.12)',    label:'Arts, Culture & Recreation', icon:'🎭', short:'Arts' },
+  selfwell:{ hex:'#FB8C00', bg:'rgba(251,140,0,0.12)',    label:'The Self & Well-being',       icon:'🧘', short:'Well-being' },
+  economy: { hex:'#FBC02D', bg:'rgba(251,192,45,0.12)',   label:'Business & Economy',          icon:'💼', short:'Business' },
+  nature:  { hex:'#43A047', bg:'rgba(67,160,71,0.12)',    label:'The Natural World',           icon:'🌿', short:'Nature' },
+  society: { hex:'#1E88E5', bg:'rgba(30,136,229,0.12)',   label:'Society & Governance',        icon:'🏛', short:'Society' },
+  tech:    { hex:'#3949AB', bg:'rgba(57,73,171,0.12)',    label:'Science & Technology',        icon:'🔬', short:'Sci & Tech' },
+  philo:   { hex:'#8E24AA', bg:'rgba(142,36,170,0.12)',   label:'Philosophy & Belief',         icon:'🔮', short:'Philosophy' },
 };
 
 // Fallback articles shown before backend loads or if offline
@@ -1856,6 +2014,9 @@ let expHeroArts = [];
 let activeFeedCats   = new Set(['arts','selfwell','economy','nature','society','tech','philo']);
 let activeFeedTopics = new Set(['AI','Climate','Politics','Finance','Sports']);
 let quizAnswered = false;
+let structuredFeedData = []; // all loaded articles pool
+let structuredFeedOffset = 0; // how many articles rendered so far
+const FEED_STRUCTURE = [15, 'bulletin', 5, 'latest', 20]; // repeating pattern
 
 // ── TOAST ──
 let toastTimer;
@@ -1894,16 +2055,47 @@ function shareArt(title) {
 }
 
 // ── LANGUAGE PICKER ──
+const UI_STRINGS = {
+  'English':   { brand:'SherrByte', home:'Home', explore:'Explore', profile:'Profile', feed:'FEED Pulse', all:'All', tagline:'Your world, curated', readmore:'Read', back:'Back' },
+  'हिंदी':    { brand:'शेरबाइट',   home:'होम', explore:'खोजें', profile:'प्रोफाइल', feed:'फीड', all:'सब', tagline:'आपकी दुनिया', readmore:'पढ़ें', back:'वापस' },
+  'தமிழ்':    { brand:'ஷேர்பைட்', home:'முகப்பு', explore:'கண்டறி', profile:'சுயவிவரம்', feed:'ஃபீட்', all:'அனைத்தும்', tagline:'உங்கள் உலகம்', readmore:'படிக்க', back:'திரும்பு' },
+  'తెలుగు':   { brand:'షేర్‌బైట్', home:'హోమ్', explore:'అన్వేషించు', profile:'ప్రొఫైల్', feed:'ఫీడ్', all:'అన్నీ', tagline:'మీ ప్రపంచం', readmore:'చదవండి', back:'వెనుకకు' },
+  'മലയാളം':  { brand:'ഷേർബൈറ്റ്', home:'ഹോം', explore:'അന്വേഷിക്കുക', profile:'പ്രൊഫൈൽ', feed:'ഫീഡ്', all:'എല്ലാം', tagline:'നിങ്ങളുടെ ലോകം', readmore:'വായിക്കുക', back:'തിരിച്ചു' },
+  'বাংলা':    { brand:'শেয়ারবাইট', home:'হোম', explore:'অন্বেষণ', profile:'প্রোফাইল', feed:'ফিড', all:'সব', tagline:'আপনার দুনিয়া', readmore:'পড়ুন', back:'ফিরে যান' },
+  'मराठी':    { brand:'शेरबाईट',  home:'होम', explore:'शोधा', profile:'प्रोफाइल', feed:'फीड', all:'सर्व', tagline:'तुमचे जग', readmore:'वाचा', back:'मागे' },
+  'ਪੰਜਾਬੀ':   { brand:'ਸ਼ੇਅਰਬਾਈਟ', home:'ਹੋਮ', explore:'ਖੋਜ', profile:'ਪ੍ਰੋਫਾਈਲ', feed:'ਫੀਡ', all:'ਸਭ', tagline:'ਤੁਹਾਡੀ ਦੁਨੀਆ', readmore:'ਪੜ੍ਹੋ', back:'ਵਾਪਸ' },
+};
+
 let currentLang = 'English';
 function toggleLangPicker() { document.getElementById('lang-picker').classList.toggle('open'); }
 function setLang(lang, flag) {
   currentLang = lang;
+  const s = UI_STRINGS[lang] || UI_STRINGS['English'];
+
+  // Update lang picker active state
   document.querySelectorAll('.lang-item').forEach(el => {
     el.classList.remove('active');
     if (el.textContent.trim().includes(lang)) el.classList.add('active');
   });
+
+  // Update brand name in header, splash, sidebar
+  const brandEl = document.getElementById('h-brand');
+  if (brandEl) brandEl.innerHTML = s.brand.slice(0,-4) + `<span style="color:var(--p-blue3)">${s.brand.slice(-4)}</span>`;
+  const spName = document.querySelector('.sp-name');
+  if (spName) spName.textContent = s.brand;
+  const sbVer  = document.querySelector('.sb-ver');
+  if (sbVer) sbVer.textContent = s.brand + ' v22 · Mobile · Build 2026.04';
+
+  // Update nav labels
+  const nbLabels = { 'nb-home': s.home, 'nb-explore': s.explore, 'nb-profile': s.profile };
+  Object.entries(nbLabels).forEach(([id, txt]) => {
+    const el = document.getElementById(id);
+    if (el) el.querySelector('.nb-lbl').textContent = txt;
+  });
+
+  // Close picker, show toast
   document.getElementById('lang-picker').classList.remove('open');
-  toast(flag + ' Language: ' + lang);
+  toast(flag + ' ' + lang);
 }
 document.addEventListener('click', (e) => {
   if (!e.target.closest('#lang-picker') && !e.target.closest('#lang-btn'))
@@ -2047,7 +2239,7 @@ function updateProfileUI(data) {
   if (sbNameEl && data.display_name) sbNameEl.textContent = data.display_name;
 }
 
-// ── ARTICLE CARD RENDER ──
+// ── ARTICLE CARD RENDER (free-flow, no boxes) ──
 function renderArticleCard(a, container) {
   const cc  = CATS[a.category] || CATS.tech;
   const liked = ST.likes.includes(a.id);
@@ -2076,7 +2268,7 @@ function renderArticleCard(a, container) {
     <div class="nc-meta">
       <div class="nc-src-ico">${(a.source||'S').charAt(0)}</div>
       <span class="nc-src">${a.source||''}</span>
-      <span class="nc-time">${timeStr ? '· '+timeStr : ''}</span>
+      <span class="nc-time" style="font-size:0.66rem;color:var(--t3)">${timeStr ? '· '+timeStr : ''}</span>
       <span class="nc-tag" style="background:${cc.bg};color:${cc.hex}">${cc.icon} ${cc.short}</span>
     </div>
     <div class="nc-body">
@@ -2084,7 +2276,6 @@ function renderArticleCard(a, container) {
         <div class="nc-title">${a.title}</div>
         <div class="nc-desc">${a.preview||a.body_ai||''}</div>
         <div class="nc-expand-extra">${a.body_ai||a.preview||''}<br><br><span style="color:var(--accent);font-weight:600;font-size:0.74rem">Double-tap to read full article →</span></div>
-        <div class="nc-tap-hint">Tap to expand · Double-tap for full</div>
       </div>
       ${a.image_url ? `<img class="nc-img" src="${a.image_url}" loading="lazy" alt="" onerror="this.style.display='none'">` : ''}
     </div>
@@ -2104,7 +2295,6 @@ function renderArticleCard(a, container) {
       </div>
     </div>`;
 
-  // Log 'read' when card scrolls into view
   const observer = new IntersectionObserver(entries => {
     if (entries[0].isIntersecting) {
       logInteract(a.id, a.category, 'read');
@@ -2116,10 +2306,71 @@ function renderArticleCard(a, container) {
   container.appendChild(d);
 }
 
+// ── RENDER BULLETIN BLOCK ──
+function renderBulletinBlock(articles, container) {
+  if (!articles.length) return;
+  const block = document.createElement('div');
+  block.className = 'feed-bulletin fadein';
+  block.innerHTML = `<div class="feed-bulletin-lbl">Top News</div>` +
+    articles.slice(0,5).map(a => {
+      const cc = CATS[a.category]||CATS.tech;
+      const safeA = JSON.stringify(a).replace(/'/g,"&#39;");
+      return `<div class="feed-bulletin-item tap" onclick='openArticle(${safeA})'>
+        <div class="fbi-dot" style="background:${cc.hex}"></div>
+        <div><div class="fbi-title">${a.title}</div><div class="fbi-src">${a.source} · ${timeAgo(a.published_at)}</div></div>
+      </div>`;
+    }).join('');
+  container.appendChild(block);
+}
+
+// ── RENDER LATEST NEWS BLOCK (CNBC style) ──
+function renderLatestBlock(articles, container) {
+  if (!articles.length) return;
+  const block = document.createElement('div');
+  block.className = 'feed-latest-news fadein';
+  block.innerHTML = `<div class="fln-header"><i class="fa-solid fa-circle-dot" style="color:var(--c-blue)"></i> Latest News</div>` +
+    articles.slice(0,4).map(a => {
+      const safeA = JSON.stringify(a).replace(/'/g,"&#39;");
+      return `<div class="fln-item tap" onclick='openArticle(${safeA})'>
+        <div class="fln-time">${timeAgo(a.published_at)||'Just now'}</div>
+        <div><div class="fln-title">${a.title}</div><div class="fln-src">${a.source}</div></div>
+      </div>`;
+    }).join('');
+  container.appendChild(block);
+}
+
+// ── RENDER STRUCTURED FEED (15 → bulletin → 5 → latest → 20 → repeat) ──
+function renderStructuredFeed(articles, container, reset=false) {
+  if (reset) { container.innerHTML=''; structuredFeedOffset=0; }
+  const pool = articles;
+  let idx = structuredFeedOffset;
+  const pattern = [15, 'bulletin', 5, 'latest', 20];
+  let pi = 0;
+
+  while (idx < pool.length) {
+    const step = pattern[pi % pattern.length];
+    if (step === 'bulletin') {
+      renderBulletinBlock(pool.slice(idx, idx+5), container);
+      pi++; continue;
+    }
+    if (step === 'latest') {
+      renderLatestBlock(pool.slice(idx, idx+4), container);
+      pi++; continue;
+    }
+    // normal articles
+    const chunk = pool.slice(idx, idx + step);
+    chunk.forEach(a => renderArticleCard(a, container));
+    idx += chunk.length;
+    pi++;
+    if (chunk.length < step) break; // not enough articles for full chunk
+  }
+  structuredFeedOffset = idx;
+}
+
 // ── LOAD FEED ──
 async function loadFeed(reset = false) {
   if (feedLoading) return;
-  if (reset) { feedPage=1; homeArticles=[]; document.getElementById('home-feed').innerHTML=''; }
+  if (reset) { feedPage=1; homeArticles=[]; structuredFeedData=[]; structuredFeedOffset=0; document.getElementById('home-feed').innerHTML=''; }
   feedLoading = true;
 
   const loadEl = document.createElement('div');
@@ -2139,16 +2390,15 @@ async function loadFeed(reset = false) {
     const c = document.getElementById('home-feed');
 
     if (articles.length === 0 && feedPage === 1) {
-      // Backend has no articles yet — show fallback
       FALLBACK_ARTICLES.forEach(a => renderArticleCard(a, c));
       return;
     }
 
-    articles.forEach(a => renderArticleCard(a, c));
-    if (data.has_more) feedPage++;
     homeArticles = homeArticles.concat(articles);
+    structuredFeedData = homeArticles;
+    renderStructuredFeed(structuredFeedData, c, reset);
+    if (data.has_more) feedPage++;
 
-    // Also update explore grid with live data
     if (feedPage === 2) updateExpGrid(articles.slice(0,14));
 
   } catch(e) {
@@ -2157,7 +2407,6 @@ async function loadFeed(reset = false) {
     if (c.children.length === 0) {
       FALLBACK_ARTICLES.forEach(a => renderArticleCard(a, c));
     }
-    // If backend is not reachable, show a notice
     const notice = document.createElement('div');
     notice.style.cssText = 'text-align:center;color:var(--t3);padding:12px;font-size:0.76rem;opacity:0.7';
     notice.textContent = '⚠️ Backend offline. Start main.py to load live news.';
@@ -2395,13 +2644,13 @@ function renderExpCats() {
   const c = document.getElementById('exp-cat-row');
   if (c.children.length) return;
   const cats = [
-    { label:'Arts',      color:'#FF5B5B', icon:'fa-palette',   cat:'arts' },
-    { label:'Well-being',color:'#FF8C42', icon:'fa-heart',     cat:'selfwell' },
-    { label:'Business',  color:'#FFD166', icon:'fa-chart-line',cat:'economy' },
-    { label:'Nature',    color:'#52C17A', icon:'fa-leaf',      cat:'nature' },
-    { label:'Society',   color:'#E0574F', icon:'fa-users',     cat:'society' },
-    { label:'Sci & Tech',color:'#00C2CC', icon:'fa-flask',     cat:'tech' },
-    { label:'Philosophy',color:'#A855F7', icon:'fa-book-open', cat:'philo' },
+    { label:'Arts',      color:'#E53935', icon:'fa-palette',    cat:'arts' },
+    { label:'Well-being',color:'#FB8C00', icon:'fa-heart',      cat:'selfwell' },
+    { label:'Business',  color:'#FBC02D', icon:'fa-chart-line', cat:'economy' },
+    { label:'Nature',    color:'#43A047', icon:'fa-leaf',       cat:'nature' },
+    { label:'Society',   color:'#1E88E5', icon:'fa-users',      cat:'society' },
+    { label:'Sci & Tech',color:'#3949AB', icon:'fa-flask',      cat:'tech' },
+    { label:'Philosophy',color:'#8E24AA', icon:'fa-book-open',  cat:'philo' },
   ];
   cats.forEach(ct => {
     const d = document.createElement('div');
@@ -2558,7 +2807,16 @@ function renderFeedCatCards() {
     const on  = activeFeedCats.has(key);
     const d   = document.createElement('div');
     d.className = 'fcat-card';
-    d.style.background = `linear-gradient(135deg, ${cat.hex}CC, ${cat.hex}88)`;
+    const catGrads = {
+      arts:    'linear-gradient(135deg,#E53935CC,#E5393588)',
+      selfwell:'linear-gradient(135deg,#FB8C00CC,#FB8C0088)',
+      economy: 'linear-gradient(135deg,#FBC02DCC,#FBC02D88)',
+      nature:  'linear-gradient(135deg,#43A047CC,#43A04788)',
+      society: 'linear-gradient(135deg,#1E88E5CC,#1E88E588)',
+      tech:    'linear-gradient(135deg,#3949ABCC,#3949AB88)',
+      philo:   'linear-gradient(135deg,#8E24AACC,#8E24AA88)',
+    };
+    d.style.background = catGrads[key] || `linear-gradient(135deg, ${cat.hex}CC, ${cat.hex}88)`;
     d.onclick = () => {
       if (activeFeedCats.has(key)) activeFeedCats.delete(key);
       else activeFeedCats.add(key);
@@ -2576,13 +2834,32 @@ function renderFeedCatCards() {
 }
 
 function renderFeedTopics() {
-  const topics = ['AI','Climate','Politics','Finance','Cricket','Bollywood','Science','Startups','Health','Education','Space','Defence','Environment','Crypto','Infrastructure'];
+  // 60+ topics from the comprehensive SherByte database (PDF spec)
+  const ALL_TOPICS = [
+    // Society & Governance
+    'Politics','Global Affairs','Law & Justice','Urban Life','Activism','Social Sciences',
+    // Business & Economy
+    'Markets','Startups','Macroeconomics','Marketing','Real Estate','FinTech','Insurance',
+    // Science & Technology
+    'AI','Software','Hardware','Internet Culture','Future Tech','Space','Mathematics','Engineering',
+    // Arts, Culture & Recreation
+    'Aesthetics','Fashion','Cinema','Music','Gaming','Literature','Subcultures','Photography',
+    // Natural World
+    'Gardening','Animals','Environment','Geography','Biology','Natural Phenomena',
+    // Self & Well-being
+    'Fitness','Mental Health','Nutrition','Lifestyle','Parenting','Relationships','Productivity',
+    // Philosophy & Belief
+    'Spirituality','Philosophy','Religion','Ethics','Consciousness','Mythology',
+    // Cross-cutting
+    'Climate','Finance','Cricket','Bollywood','Science','Health','Education','Defence',
+    'Crypto','Infrastructure','Geopolitics','Cybersecurity','Sustainability','IPL',
+  ];
   const c = document.getElementById('feed-topics');
   c.innerHTML = '';
-  const colors = ['#FF5B5B','#FF8C42','#FFD166','#52C17A','#4F6BD4','#7B8FE8','#A855F7'];
-  topics.forEach(t => {
+  const colors = Object.values(CATS).map(c=>c.hex);
+  ALL_TOPICS.forEach((t,i) => {
     const on    = activeFeedTopics.has(t);
-    const color = colors[topics.indexOf(t) % colors.length];
+    const color = colors[i % colors.length];
     const d     = document.createElement('div');
     d.className  = `feed-topic${on?' on':''}`;
     d.style.color       = on ? '#fff' : color;
@@ -2627,6 +2904,111 @@ function renderFeedArticles() {
   });
 }
 
+// ── FEED EDIT MODAL ──
+function openFeedEditModal() {
+  const modal = document.getElementById('feed-edit-modal');
+  modal.classList.add('open');
+  renderFemCats();
+  renderFemTopics();
+}
+function closeFeedEditModal(e) {
+  if (!e || e.target === document.getElementById('feed-edit-modal')) {
+    document.getElementById('feed-edit-modal').classList.remove('open');
+  }
+}
+function renderFemCats() {
+  const c = document.getElementById('fem-cat-grid');
+  c.innerHTML = '';
+  Object.entries(CATS).forEach(([key,cat]) => {
+    const on = activeFeedCats.has(key);
+    const d = document.createElement('div');
+    d.className = `fem-cat-btn${on?' on':''}`;
+    d.style.background = on ? cat.hex+'22' : 'var(--bg2)';
+    d.style.borderColor = on ? cat.hex : 'var(--line2)';
+    d.innerHTML = `<div class="fem-cat-ico">${cat.icon}</div><div class="fem-cat-name" style="color:${on?cat.hex:'var(--t2)'}">${cat.short}</div>`;
+    d.onclick = () => {
+      if (activeFeedCats.has(key)) activeFeedCats.delete(key);
+      else activeFeedCats.add(key);
+      renderFemCats();
+    };
+    c.appendChild(d);
+  });
+}
+function renderFemTopics() {
+  const ALL_TOPICS = ['Politics','Global Affairs','Law & Justice','Activism','AI','Software','Hardware','Space','Climate','Finance','Cricket','Bollywood','Science','Health','Education','Defence','Crypto','Infrastructure','Fashion','Cinema','Music','Gaming','Fitness','Mental Health','Nutrition','Productivity','Spirituality','Philosophy','Religion','Ethics','Consciousness','Mythology','Startups','Markets','Macroeconomics','Real Estate','Animals','Environment','Geography','Biology','Natural Phenomena','Cybersecurity','Future Tech','Mathematics','Engineering','Photography','Literature','IPL','Geopolitics','Sustainability'];
+  const c = document.getElementById('fem-topics-grid');
+  c.innerHTML = '';
+  const colors = Object.values(CATS).map(c=>c.hex);
+  ALL_TOPICS.forEach((t,i) => {
+    const on = activeFeedTopics.has(t);
+    const color = colors[i % colors.length];
+    const d = document.createElement('div');
+    d.className = `fem-topic${on?' on':''}`;
+    d.style.color = on ? '#fff' : color;
+    d.style.borderColor = on ? color : 'var(--line)';
+    d.style.background = on ? color : 'transparent';
+    d.textContent = t;
+    d.onclick = () => {
+      if (activeFeedTopics.has(t)) activeFeedTopics.delete(t); else activeFeedTopics.add(t);
+      renderFemTopics();
+    };
+    c.appendChild(d);
+  });
+}
+function saveFeedEdit() {
+  renderFeedFilterChips();
+  renderFeedCatCards();
+  renderFeedTopics();
+  renderFeedArticles();
+  document.getElementById('feed-edit-modal').classList.remove('open');
+  toast('✦ Feed preferences saved!');
+  if (ST.token) {
+    api('/me/feed', { method:'PUT', body: JSON.stringify({ categories: Array.from(activeFeedCats), topics: Array.from(activeFeedTopics) }) }).catch(()=>{});
+  }
+}
+
+// ── EDIT PROFILE MODAL ──
+function openEditProfile() {
+  const modal = document.getElementById('edit-profile-modal');
+  modal.classList.add('open');
+  // Pre-fill with current values
+  const nameEl = document.getElementById('prof-name');
+  const bioEl  = document.getElementById('prof-bio');
+  if (nameEl) document.getElementById('epm-name').value = nameEl.textContent !== '—' ? nameEl.textContent : '';
+  if (bioEl) document.getElementById('epm-bio').value = bioEl.textContent !== 'Tap Edit Profile to set your bio' ? bioEl.textContent : '';
+}
+function closeEditProfile(e) {
+  if (!e || e.target === document.getElementById('edit-profile-modal')) {
+    document.getElementById('edit-profile-modal').classList.remove('open');
+  }
+}
+async function saveProfile() {
+  const name  = document.getElementById('epm-name').value.trim();
+  const bio   = document.getElementById('epm-bio').value.trim();
+  const link  = document.getElementById('epm-link').value.trim();
+  const uname = document.getElementById('epm-username').value.trim();
+
+  // Update UI immediately
+  if (name) {
+    document.getElementById('prof-name').textContent = name;
+    document.getElementById('sb-name').textContent = name;
+  }
+  if (bio) document.getElementById('prof-bio').textContent = bio;
+  if (uname) {
+    document.getElementById('prof-handle').textContent = '@' + uname.replace('@','') + ' ✦';
+    document.getElementById('sb-handle').textContent = '@' + uname.replace('@','') + ' ✦';
+  }
+
+  // Persist to backend
+  if (ST.token) {
+    try {
+      await api('/me', { method:'PUT', body: JSON.stringify({ display_name: name||undefined, bio: bio||undefined, link: link||undefined }) });
+    } catch(e) {}
+  }
+  document.getElementById('edit-profile-modal').classList.remove('open');
+  toast('✦ Profile updated!');
+}
+
 // ── NAV ──
 const VIEW_MAP = { home:'v-home', explore:'v-explore', profile:'v-profile', bookmarks:'v-bookmarks', notifs:'v-notifs', feed:'v-feed' };
 const NB_MAP   = { home:'nb-home', explore:'nb-explore', profile:'nb-profile' };
@@ -2648,6 +3030,7 @@ function navTo(name) {
   hBrand.style.display='flex'; hPage.style.display='none'; hSearch.style.display='none';
 
   if (name==='explore') {
+    if (!marketDataLoaded) loadLiveMarkets();
     hBrand.style.display='none'; hPage.style.display='block'; hPage.textContent='Explore';
     hSearch.style.display='flex'; langBtn.style.display='none';
   } else if (name==='feed') {
@@ -2673,19 +3056,158 @@ function navTo(name) {
   }
 }
 
+
+// ── LIVE MARKET DATA ────────────────────────────────────────────────────────
+let marketDataLoaded = false;
+
+async function loadLiveMarkets() {
+  try {
+    const data = await api('/markets');
+
+    // ── Ticker bar ──────────────────────────────────────────────────────────
+    const stocks      = data.stocks     || {};
+    const commodities = data.commodities|| {};
+    const crypto      = data.crypto     || {};
+
+    const nifty  = stocks.nifty  || {};
+    const sensex = stocks.sensex || {};
+    const nasdaq = stocks.nasdaq || {};
+    const gold   = commodities.gold  || {};
+    const silver = commodities.silver|| {};
+    const oil    = commodities.oil   || {};
+    const usdinr = stocks.usdinr || {};
+    const btc    = crypto.bitcoin || {};
+
+    function fmt(n, dec=2) { return n ? Number(n).toLocaleString('en-IN', {maximumFractionDigits:dec}) : '--'; }
+    function arrow(n) { return (n >= 0) ? `▲ +${Math.abs(n).toFixed(2)}%` : `▼ −${Math.abs(n).toFixed(2)}%`; }
+    function arrowColor(n) { return n >= 0 ? '#43A047' : '#E53935'; }
+
+    // Build ticker items
+    const tickerItems = [
+      { label:'NIFTY',   color:'#43A047', val:fmt(nifty.price,0),   chg:nifty.change_pct  },
+      { label:'SENSEX',  color:'#1E88E5', val:fmt(sensex.price,0),  chg:sensex.change_pct },
+      { label:'NASDAQ',  color:'#8E24AA', val:fmt(nasdaq.price,0),  chg:nasdaq.change_pct },
+      { label:'GOLD',    color:'#FBC02D', val:'$'+fmt(gold.price),  chg:gold.change_pct   },
+      { label:'SILVER',  color:'#e0e0e0', val:'$'+fmt(silver.price),chg:silver.change_pct },
+      { label:'OIL',     color:'#FB8C00', val:'$'+fmt(oil.price)+'/bbl', chg:oil.change_pct },
+      { label:'USD/INR', color:'#FF8C42', val:'₹'+fmt(usdinr.price,2), chg:usdinr.change_pct },
+      { label:'BTC',     color:'#FBC02D', val:'$'+fmt(btc.usd,0),  chg:btc.change_24h    },
+    ];
+
+    // Render ticker (doubled for seamless scroll)
+    const tickerHtml = [...tickerItems, ...tickerItems].map(t => {
+      const c = arrowColor(t.chg || 0);
+      return `<span class="tick-item">
+        <span style="color:${t.color}">${t.label}</span>
+        ${t.val}
+        <span style="color:${c};font-size:0.6rem">${arrow(t.chg||0)}</span>
+      </span>`;
+    }).join('');
+
+    const ti = document.getElementById('ticker-inner');
+    if (ti) ti.innerHTML = tickerHtml;
+
+    // ── Bento: Markets card ─────────────────────────────────────────────────
+    const setEl = (id, text, color) => {
+      const el = document.getElementById(id);
+      if (el) { el.textContent = text; if (color) el.style.color = color; }
+    };
+
+    setEl('bm-nifty-val',  '₹' + fmt(nifty.price,0),  arrowColor(nifty.change_pct));
+    setEl('bm-nifty-chg',  arrow(nifty.change_pct),    arrowColor(nifty.change_pct));
+    setEl('bm-sensex-val', '₹' + fmt(sensex.price,0),  arrowColor(sensex.change_pct));
+    setEl('bm-sensex-chg', arrow(sensex.change_pct),   arrowColor(sensex.change_pct));
+
+    // ── Bento: Commodities card ─────────────────────────────────────────────
+    setEl('bm-gold-val',  '$' + fmt(gold.price),   '#FBC02D');
+    setEl('bm-gold-chg',  arrow(gold.change_pct),  arrowColor(gold.change_pct));
+    setEl('bm-oil-val',   '$' + fmt(oil.price)+'/bbl', '#FB8C00');
+    setEl('bm-oil-chg',   arrow(oil.change_pct),   arrowColor(oil.change_pct));
+
+    // ── Bento: Weather card ─────────────────────────────────────────────────
+    const weather = data.weather || {};
+    const cities  = Object.keys(weather);
+    if (cities.length > 0) {
+      const city = cities[0];
+      const w    = weather[city];
+      const loc  = document.getElementById('bw-loc');
+      const tmp  = document.getElementById('bw-temp');
+      const dsc  = document.getElementById('bw-desc');
+      const ico  = document.getElementById('bw-icon');
+      if (loc) loc.innerHTML = `<i class="fa-solid fa-location-dot" style="font-size:0.6rem"></i> ${city}`;
+      if (tmp) tmp.textContent = w.temp + '°';
+      if (dsc) dsc.textContent = `${w.description} · Feels ${w.feels_like}°`;
+      const iconMap = {'01d':'☀️','02d':'⛅','03d':'☁️','04d':'☁️','09d':'🌧️',
+                       '10d':'🌦️','11d':'⛈️','13d':'❄️','50d':'🌫️',
+                       '01n':'🌙','02n':'⛅','03n':'☁️','04n':'☁️'};
+      if (ico) ico.textContent = iconMap[w.icon] || '🌤';
+    }
+
+    marketDataLoaded = true;
+    log.debug && log.debug('Markets loaded');
+  } catch(e) {
+    console.warn('Market data load failed:', e.message);
+    // Keep showing last values or show offline message
+    const ti = document.getElementById('ticker-inner');
+    if (ti && ti.textContent.includes('Loading')) {
+      ti.innerHTML = '<span class="tick-item" style="color:var(--t3)">⚠️ Market data unavailable — check backend</span>';
+    }
+  }
+}
+
+// ── AVATAR HELPER ────────────────────────────────────────────────────────────
+function setAllAvatars(url) {
+  if (!url) return;
+  ['sb-ava-img','prof-ava-img','epm-ava','h-avatar-img'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.src = url;
+  });
+  // Also update header avatar
+  const ha = document.querySelector('.h-avatar img');
+  if (ha) ha.src = url;
+}
+
+// ── ENHANCED loadProfileFromAPI ──────────────────────────────────────────────
 async function loadProfileFromAPI() {
   try {
     const me = await api('/me');
+
+    // Name
+    ['prof-name','sb-name'].forEach(id => {
+      const el = document.getElementById(id); if (el && me.display_name) el.textContent = me.display_name;
+    });
     const nameEl = document.querySelector('.prof-name');
-    const handleEl = document.querySelector('.prof-handle');
     if (nameEl && me.display_name) nameEl.textContent = me.display_name;
-    if (handleEl && me.email) handleEl.textContent = '@' + me.email.split('@')[0] + ' ✦';
-    // Update interest vector display
+
+    // Handle
+    const handle = document.querySelector('.prof-handle');
+    if (handle) handle.textContent = '@' + (me.email||'').split('@')[0] + ' ✦';
+    const sbHandle = document.querySelector('.sb-handle');
+    if (sbHandle) sbHandle.textContent = '@' + (me.email||'').split('@')[0];
+
+    // Bio
+    const bio = document.querySelector('.prof-bio');
+    if (bio && me.bio) bio.textContent = me.bio;
+
+    // Avatar
+    if (me.avatar_url) setAllAvatars(me.avatar_url);
+
+    // Stats from /me/stats
+    try {
+      const stats = await api('/me/stats');
+      const setTxt = (id, v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
+      setTxt('saved-ct',      stats.saved_count || 0);
+      setTxt('prof-articles', stats.articles_read || 0);
+      setTxt('prof-time',     stats.time_spent_minutes + ' min');
+      setTxt('prof-streak',   stats.streak_days + ' days');
+    } catch(e) { /* stats optional */ }
+
     ST.interests = me.interests || {};
     persist();
-  } catch(e) {}
+  } catch(e) {
+    console.warn('Profile load failed:', e.message);
+  }
 }
-
 // ── TIME AGO ──
 function timeAgo(dateStr) {
   if (!dateStr) return '';
@@ -2749,7 +3271,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('saved-ct').textContent = ST.saves.length;
 
   // Load live feed
-  loadFeed(true).then(() => {
+  loadFeed(true);
+  loadLiveMarkets();
+  setInterval(loadLiveMarkets, 5 * 60 * 1000); // refresh every 5 min.then(() => {
     // After feed loads, populate explore hero and grid
     if (homeArticles.length) {
       renderExpHeroWithArticles(homeArticles);
