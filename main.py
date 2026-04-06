@@ -420,21 +420,100 @@ async def fetch_newsapi(client: httpx.AsyncClient) -> list:
         log.warning("NewsAPI error: %s", exc)
         return []
 
+def extract_image_from_entry(entry) -> str:
+    """
+    Try every known RSS image location in order of reliability.
+    Returns the first valid image URL found, or empty string.
+    """
+    import re as _re
+
+    # 1. media:content (most common in news RSS)
+    if hasattr(entry, "media_content") and entry.media_content:
+        for m in entry.media_content:
+            url = m.get("url", "")
+            if url and any(url.lower().endswith(ext) for ext in (".jpg",".jpeg",".png",".webp")):
+                return url
+            if url and ("image" in m.get("type","") or "medium" in m.get("medium","")):
+                return url
+
+    # 2. media:thumbnail
+    if hasattr(entry, "media_thumbnail") and entry.media_thumbnail:
+        url = entry.media_thumbnail[0].get("url", "")
+        if url: return url
+
+    # 3. enclosures (BBC, Guardian use this)
+    if hasattr(entry, "enclosures") and entry.enclosures:
+        for enc in entry.enclosures:
+            url = enc.get("href","") or enc.get("url","")
+            if url and "image" in enc.get("type","image"):
+                return url
+
+    # 4. links array (some feeds put image in links)
+    if hasattr(entry, "links"):
+        for link in entry.links:
+            href = link.get("href","")
+            if href and "image" in link.get("type",""):
+                return href
+
+    # 5. Parse image from summary/content HTML (NDTV, TOI, Hindu do this)
+    for field in ["summary", "content", "description"]:
+        raw = ""
+        if field == "content" and hasattr(entry, "content") and entry.content:
+            raw = entry.content[0].get("value","")
+        else:
+            raw = getattr(entry, field, "") or ""
+        if raw:
+            imgs = _re.findall(r'<img[^>]+src=["\']([^"\']+)["\']', raw)
+            for img_url in imgs:
+                if img_url.startswith("http") and not "icon" in img_url and not "logo" in img_url:
+                    return img_url
+
+    # 6. image tag at feed/entry level
+    if hasattr(entry, "image") and entry.image:
+        url = entry.image.get("href","") or entry.image.get("url","")
+        if url: return url
+
+    return ""
+
+
+# Unsplash keywords for each category (free, no API key needed)
+UNSPLASH_KEYWORDS = {
+    "society":  ["parliament","government","city","community","protest"],
+    "economy":  ["stock-market","business","finance","money","economy"],
+    "tech":     ["technology","artificial-intelligence","computer","space","science"],
+    "arts":     ["art","cinema","music","culture","festival"],
+    "nature":   ["nature","forest","wildlife","ocean","mountains"],
+    "selfwell": ["yoga","health","fitness","meditation","wellness"],
+    "philo":    ["philosophy","books","library","wisdom","meditation"],
+}
+
+def get_fallback_image(category: str, title: str, article_id: str) -> str:
+    """
+    Returns a relevant Unsplash image URL for articles without images.
+    Uses Unsplash Source API — free, no key, redirects to a real photo.
+    Seed ensures same article always gets same image (consistent UI).
+    """
+    import random, hashlib as _h
+    keywords = UNSPLASH_KEYWORDS.get(category, ["news","india"])
+    # Pick keyword based on article id (deterministic, not random each time)
+    seed = int(_h.md5(article_id.encode()).hexdigest()[:8], 16)
+    keyword = keywords[seed % len(keywords)]
+    # Unsplash Source: returns 800x450 photo matching keyword
+    return f"https://source.unsplash.com/800x450/?{keyword}&sig={seed}"
+
+
 async def fetch_rss(client: httpx.AsyncClient) -> list:
     result = []
     for feed_url in RSS_FEEDS:
         try:
             r    = await client.get(feed_url, timeout=8, follow_redirects=True)
             feed = feedparser.parse(r.text)
-            for entry in feed.entries[:8]:   # 8 per feed = more articles
+            for entry in feed.entries[:8]:
                 url = entry.get("link", "")
                 if not url: continue
-                # Try to get image from media content
-                image_url = ""
-                if hasattr(entry, "media_content") and entry.media_content:
-                    image_url = entry.media_content[0].get("url", "")
-                elif hasattr(entry, "media_thumbnail") and entry.media_thumbnail:
-                    image_url = entry.media_thumbnail[0].get("url", "")
+
+                # Exhaustive image extraction
+                image_url = extract_image_from_entry(entry)
 
                 result.append({
                     "title":        entry.get("title", ""),
@@ -446,7 +525,8 @@ async def fetch_rss(client: httpx.AsyncClient) -> list:
                 })
         except Exception as exc:
             log.debug("RSS skip %s: %s", feed_url, exc)
-    log.info("RSS → %d articles", len(result))
+    log.info("RSS → %d articles (%d with images)",
+             len(result), sum(1 for r in result if r["image_url"]))
     return result
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -543,6 +623,11 @@ async def collect_news() -> int:
             raw["title"], body, category
         )
 
+        # Use Unsplash fallback if no image from source
+        image_url = raw.get("image_url", "").strip()
+        if not image_url:
+            image_url = get_fallback_image(category, raw["title"], art_id)
+
         conn.execute(
             """INSERT OR IGNORE INTO articles
                (id,title,preview,body_ai,image_url,category,scope,
@@ -550,7 +635,7 @@ async def collect_news() -> int:
                VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 art_id, raw["title"], preview, body_ai,
-                raw.get("image_url", ""), category, scope,
+                image_url, category, scope,
                 raw.get("source", ""), raw.get("source_url", ""),
                 raw.get("published_at", ""),
                 json.dumps(quiz_json), json.dumps(word_json),

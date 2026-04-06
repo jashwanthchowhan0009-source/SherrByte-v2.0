@@ -1466,6 +1466,54 @@ nav.hidden { transform: translateX(-50%) translateY(110px); opacity: 0; pointer-
 /* Explore header: hide notif, show search */
 #v-explore .hdr-explore-notif { display: none !important; }
 
+
+/* ── Article image handling ────────────────────────────────────── */
+.nc-img-wrap {
+  width: 88px; height: 66px; border-radius: 12px;
+  overflow: hidden; flex-shrink: 0; position: relative;
+  background: var(--bg3); border: 1px solid var(--line);
+}
+.nc-img-wrap img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  transition: opacity 0.3s;
+}
+.nc-img-placeholder {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem; opacity: 0.6;
+}
+
+/* Article full-screen image 16:9 */
+.ao-hero {
+  width: 100%; aspect-ratio: 16/9;
+  background: var(--bg3); position: relative; overflow: hidden;
+}
+.ao-hero img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
+.ao-hero-placeholder {
+  width: 100%; height: 100%;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 8px;
+  font-size: 3rem; opacity: 0.5;
+}
+
+/* Explore grid images */
+.exp-card img {
+  width: 100%; height: 100%; object-fit: cover;
+  min-height: 120px; display: block;
+}
+.exp-card-placeholder {
+  min-height: 120px; width: 100%;
+  display: flex; align-items: center;
+  justify-content: center; font-size: 2rem; opacity: 0.4;
+}
+
+/* Bento hero */
+.exp-hero img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
+
 </style>
 </head>
 <body>
@@ -1614,9 +1662,22 @@ nav.hidden { transform: translateX(-50%) translateY(110px); opacity: 0; pointer-
 
 <!-- ════════ EXPLORE ════════ -->
 <div id="v-explore" class="view">
-  <div class="live-ticker" id="live-ticker">
-    <div class="ticker-inner" id="ticker-inner">
-      <span class="tick-item">⚡ Loading live data...</span>
+  <div class="live-ticker">
+    <div class="ticker-inner">
+      <span class="tick-item"><span style="color:#43A047">NIFTY</span> 22,580 <span class="tick-up">▲ +1.1%</span></span>
+      <span class="tick-item"><span style="color:#FBC02D">GOLD</span> ₹72,450 <span class="tick-up">▲ +0.4%</span></span>
+      <span class="tick-item"><span style="color:#e0e0e0">SILVER</span> ₹88,200 <span class="tick-dn">▼ −0.2%</span></span>
+      <span class="tick-item"><span style="color:#1E88E5">BSE</span> 73,088 <span class="tick-up">▲ +0.6%</span></span>
+      <span class="tick-item"><span style="color:#8E24AA">NASDAQ</span> 16,274 <span class="tick-up">▲ +0.8%</span></span>
+      <span class="tick-item"><span style="color:#E53935">CRUDE</span> $82.4/bbl <span class="tick-dn">▼ −1.2%</span></span>
+      <span class="tick-item"><span style="color:#FB8C00">USD/INR</span> ₹83.42 <span class="tick-dn">▼ −0.1%</span></span>
+      <span class="tick-item"><span style="color:#43A047">NIFTY</span> 22,580 <span class="tick-up">▲ +1.1%</span></span>
+      <span class="tick-item"><span style="color:#FBC02D">GOLD</span> ₹72,450 <span class="tick-up">▲ +0.4%</span></span>
+      <span class="tick-item"><span style="color:#e0e0e0">SILVER</span> ₹88,200 <span class="tick-dn">▼ −0.2%</span></span>
+      <span class="tick-item"><span style="color:#1E88E5">BSE</span> 73,088 <span class="tick-up">▲ +0.6%</span></span>
+      <span class="tick-item"><span style="color:#8E24AA">NASDAQ</span> 16,274 <span class="tick-up">▲ +0.8%</span></span>
+      <span class="tick-item"><span style="color:#E53935">CRUDE</span> $82.4/bbl <span class="tick-dn">▼ −1.2%</span></span>
+      <span class="tick-item"><span style="color:#FB8C00">USD/INR</span> ₹83.42 <span class="tick-dn">▼ −0.1%</span></span>
     </div>
   </div>
 
@@ -1638,24 +1699,24 @@ nav.hidden { transform: translateX(-50%) translateY(110px); opacity: 0; pointer-
     <div class="exp-sec-hdr-title">📊 At a Glance</div>
   </div>
   <div class="exp-bento">
-    <div class="bento-weather tap" id="bento-weather" onclick="toast('🌤 Fetching weather...')">
+    <div class="bento-weather tap" onclick="toast('🌤 Kochi weather details')">
       <div>
-        <div class="bw-loc" id="bw-loc"><i class="fa-solid fa-location-dot" style="font-size:0.6rem"></i> Loading...</div>
-        <div class="bw-temp" id="bw-temp">--°</div>
-        <div class="bw-desc" id="bw-desc">Fetching weather...</div>
+        <div class="bw-loc"><i class="fa-solid fa-location-dot" style="font-size:0.6rem"></i> Kochi, Kerala</div>
+        <div class="bw-temp">31°</div>
+        <div class="bw-desc">Partly cloudy · Feels 34°</div>
       </div>
-      <div class="bw-icon" id="bw-icon">🌤</div>
+      <div class="bw-icon">⛅</div>
     </div>
-    <div class="bento-card tap" id="bento-markets" onclick="toast('📈 Live markets')">
-      <div class="bc-lbl">MARKETS (LIVE)</div>
+    <div class="bento-card tap" onclick="toast('📈 Markets detail')">
+      <div class="bc-lbl">Markets</div>
       <div class="bc-name">NIFTY 50</div>
-      <div class="bc-val" id="bm-nifty-val" style="color:#52C17A">--</div>
-      <div class="bc-chg" id="bm-nifty-chg" style="color:#52C17A">Loading...</div>
-      <div class="bc-bar"><div class="bc-bar-fill" id="bm-nifty-bar" style="width:50%;background:linear-gradient(90deg,var(--p-blue),#52C17A)"></div></div>
+      <div class="bc-val" style="color:#52C17A">22,580</div>
+      <div class="bc-chg" style="color:#52C17A">▲ +1.12% today</div>
+      <div class="bc-bar"><div class="bc-bar-fill" style="width:72%;background:linear-gradient(90deg,var(--p-blue),#52C17A)"></div></div>
       <div class="bc-div"></div>
       <div class="bc-name">SENSEX</div>
-      <div class="bc-val" id="bm-sensex-val" style="color:#52C17A">--</div>
-      <div class="bc-chg" id="bm-sensex-chg" style="color:#52C17A">Loading...</div>
+      <div class="bc-val" style="color:#52C17A">73,088</div>
+      <div class="bc-chg" style="color:#52C17A">▲ +0.6%</div>
     </div>
     <!-- IPL Scoreboard -->
     <div class="bento-card tap" onclick="toast('🏏 Full IPL scorecard')">
@@ -1667,16 +1728,8 @@ nav.hidden { transform: translateX(-50%) translateY(110px); opacity: 0; pointer-
       <div style="font-size:0.6rem;color:var(--t3);margin-top:4px">Target: 204 · Need 17 off 10</div>
     </div>
     <!-- Gold & Silver -->
-    <div class="bento-card tap" id="bento-commodities" onclick="toast('🥇 Commodity prices')">
-      <div class="bc-lbl">COMMODITIES</div>
-      <div class="bc-name">Gold (per oz)</div>
-      <div class="bc-val" id="bm-gold-val" style="color:#FBC02D">--</div>
-      <div class="bc-chg" id="bm-gold-chg" style="color:#52C17A">Loading...</div>
-      <div class="bc-div"></div>
-      <div class="bc-name">Crude Oil</div>
-      <div class="bc-val" id="bm-oil-val" style="color:#FB8C00">--</div>
-      <div class="bc-chg" id="bm-oil-chg" style="color:#52C17A">Loading...</div>
-    </div>
+    <div class="bento-card tap" onclick="toast('🥇 Commodity prices')">
+      <div class="bc-lbl">Commodities</div>
       <div class="bc-name">Gold</div>
       <div class="bc-val" style="color:#FFD166">₹72,450</div>
       <div class="bc-chg" style="color:#52C17A">▲ +0.4% /10g</div>
@@ -1960,6 +2013,87 @@ nav.hidden { transform: translateX(-50%) translateY(110px); opacity: 0; pointer-
 
 // ── CONFIG ──────────────────────────────────────────────────────────────
 const API_URL = "https://sherrbyte-v2-0-1.onrender.com";
+
+
+// ── SMART IMAGE HELPER ──────────────────────────────────────────────────────
+// Category gradient backgrounds when no image is available
+const CAT_GRADIENTS = {
+  society:  'linear-gradient(135deg,#0D2137,#1E88E5 80%)',
+  economy:  'linear-gradient(135deg,#1A1400,#FBC02D 80%)',
+  tech:     'linear-gradient(135deg,#0A0D2A,#3949AB 80%)',
+  arts:     'linear-gradient(135deg,#2A0A0A,#E53935 80%)',
+  nature:   'linear-gradient(135deg,#0A1A0A,#43A047 80%)',
+  selfwell: 'linear-gradient(135deg,#1A0D00,#FB8C00 80%)',
+  philo:    'linear-gradient(135deg,#150A1A,#8E24AA 80%)',
+};
+
+const CAT_ICONS_IMG = {
+  society:'🏛', economy:'💼', tech:'🔬', arts:'🎭',
+  nature:'🌿', selfwell:'🧘', philo:'🔮',
+};
+
+/**
+ * Creates an <img> element that:
+ *  - Shows the real image if URL is valid and loads
+ *  - Falls back to category gradient + icon if image fails or is missing
+ * @param {string} url        - image URL (may be empty)
+ * @param {string} category   - article category key
+ * @param {string} cssClass   - CSS class for the img
+ * @param {string} wrapClass  - CSS class for the wrapper div
+ */
+function smartImg(url, category, cssClass, wrapClass) {
+  const cat     = category || 'tech';
+  const gradient= CAT_GRADIENTS[cat] || CAT_GRADIENTS.tech;
+  const icon    = CAT_ICONS_IMG[cat] || '📰';
+
+  const wrap = document.createElement('div');
+  wrap.className = wrapClass || 'nc-img-wrap';
+
+  if (url) {
+    const img = document.createElement('img');
+    img.src     = url;
+    img.alt     = '';
+    img.loading = 'lazy';
+    img.className = cssClass || '';
+    img.onerror = () => {
+      // Image failed to load → show gradient placeholder
+      wrap.innerHTML = '';
+      wrap.style.background = gradient;
+      const ph = document.createElement('div');
+      ph.className = 'nc-img-placeholder';
+      ph.textContent = icon;
+      wrap.appendChild(ph);
+    };
+    wrap.appendChild(img);
+  } else {
+    // No URL at all → immediate gradient placeholder
+    wrap.style.background = gradient;
+    const ph = document.createElement('div');
+    ph.className = 'nc-img-placeholder';
+    ph.textContent = icon;
+    wrap.appendChild(ph);
+  }
+  return wrap;
+}
+
+/**
+ * Same but returns HTML string for inline template literals.
+ * Uses a data-src + data-cat approach; call activateSmartImgs() after append.
+ */
+function smartImgHtml(url, category, wrapStyle) {
+  const style = wrapStyle || '';
+  return url
+    ? `<img src="${url}" loading="lazy" alt="" style="${style}"
+         data-cat="${category}"
+         onerror="this.outerHTML=catPlaceholderHtml('${category}','${style}')">`
+    : `<div style="width:100%;height:100%;${style};background:${CAT_GRADIENTS[category]||CAT_GRADIENTS.tech};display:flex;align-items:center;justify-content:center;font-size:1.8rem;opacity:0.7">${CAT_ICONS_IMG[category]||'📰'}</div>`;
+}
+
+function catPlaceholderHtml(category, style) {
+  const gradient = CAT_GRADIENTS[category] || CAT_GRADIENTS.tech;
+  const icon     = CAT_ICONS_IMG[category] || '📰';
+  return `<div style="width:100%;height:100%;${style};background:${gradient};display:flex;align-items:center;justify-content:center;font-size:1.8rem;opacity:0.7">${icon}</div>`;
+}
 
 // ── STATE ──
 let ST = { likes:[], saves:[], token:null, userId:null, interests:{} };
@@ -2277,7 +2411,7 @@ function renderArticleCard(a, container) {
         <div class="nc-desc">${a.preview||a.body_ai||''}</div>
         <div class="nc-expand-extra">${a.body_ai||a.preview||''}<br><br><span style="color:var(--accent);font-weight:600;font-size:0.74rem">Double-tap to read full article →</span></div>
       </div>
-      ${a.image_url ? `<img class="nc-img" src="${a.image_url}" loading="lazy" alt="" onerror="this.style.display='none'">` : ''}
+      ${smartImgHtml(a.image_url, a.category, 'border-radius:12px;width:88px;height:66px;object-fit:cover;flex-shrink:0')}
     </div>
     <div class="nc-acts">
       <div class="nc-act tap ${liked?'red':''}" id="lk-${a.id}" onclick="toggleLike('${a.id}','${a.category}',this)">
@@ -2469,9 +2603,21 @@ function openArticle(a) {
   currentArticle = a;
   const cc = CATS[a.category] || CATS.tech;
 
-  const imgEl = document.getElementById('ao-img');
-  if (a.image_url) { imgEl.src = a.image_url; imgEl.style.display='block'; }
-  else imgEl.style.display='none';
+  const aoHero = document.querySelector('.ao-hero');
+  if (aoHero) {
+    aoHero.innerHTML = '';
+    const heroWrap = smartImg(a.image_url, a.category, '', '');
+    heroWrap.style.cssText = 'width:100%;height:100%;position:relative;';
+    const overlay = document.createElement('div');
+    overlay.className = 'ao-hero-overlay';
+    const pill = document.createElement('div');
+    pill.className = 'ao-hero-cat';
+    pill.id = 'ao-cat-pill';
+    aoHero.appendChild(heroWrap);
+    aoHero.appendChild(overlay);
+    aoHero.appendChild(pill);
+  }
+  const imgEl = document.getElementById('ao-img') || {src:'',style:{}};
 
   document.getElementById('ao-title-hdr').textContent = a.title;
 
@@ -2508,7 +2654,7 @@ function openArticle(a) {
     d.className = 'ao-related-card tap';
     d.onclick = () => openArticle(ra);
     d.innerHTML = `
-      ${ra.image_url ? `<img class="ao-related-img" src="${ra.image_url}" loading="lazy" alt="" onerror="this.style.display='none'">` : '<div class="ao-related-img" style="background:var(--bg3)"></div>'}
+      ${ra.image_url ? `<img class="ao-related-img" src="${ra.image_url}" loading="lazy" alt="" onerror="this.style.background=CAT_GRADIENTS[this.closest('[data-cat]')?.dataset?.cat||'tech']||'var(--bg3)';this.style.display='none'">` : '<div class="ao-related-img" style="background:var(--bg3)"></div>'}
       <div class="ao-related-info">
         <div class="ao-related-cat" style="color:${rcc.hex}">${rcc.short}</div>
         <div class="ao-related-title">${ra.title}</div>
@@ -2631,7 +2777,7 @@ function updateExpGrid(articles) {
     d.className = 'exp-card fadein tap' + (i%7===0?' tall':'');
     d.onclick = () => openArticle(a);
     d.innerHTML = `
-      ${a.image_url ? `<img src="${a.image_url}" loading="lazy" alt="" onerror="this.style.display='none'">` : `<div style="height:120px;background:${cc.bg}"></div>`}
+      ${a.image_url ? `<img src="${a.image_url}" loading="lazy" alt="" onerror="this.style.background=CAT_GRADIENTS[this.closest('[data-cat]')?.dataset?.cat||'tech']||'var(--bg3)';this.style.display='none'">` : `<div style="height:120px;background:${cc.bg}"></div>`}
       <div class="exp-card-info">
         <div class="exp-card-cat" style="color:${cc.hex}">${cc.icon} ${cc.short}</div>
         <div class="exp-card-title">${a.title}</div>
@@ -2740,7 +2886,7 @@ async function renderBM() {
       d.className = 'bm-card fadein tap';
       d.onclick = (e) => { if (!e.target.closest('.bm-act')) openArticle(a); };
       d.innerHTML = `
-        ${a.image_url ? `<img class="bm-img" src="${a.image_url}" loading="lazy" alt="" onerror="this.style.display='none'">` : `<div class="bm-img" style="background:${cc.bg}"></div>`}
+        ${a.image_url ? `<img class="bm-img" src="${a.image_url}" loading="lazy" alt="" onerror="this.style.background=CAT_GRADIENTS[this.closest('[data-cat]')?.dataset?.cat||'tech']||'var(--bg3)';this.style.display='none'">` : `<div class="bm-img" style="background:${cc.bg}"></div>`}
         <div class="bm-info">
           <div class="bm-title">${a.title}</div>
           <div class="bm-src">${a.source} · ${cc.short}</div>
@@ -2894,7 +3040,7 @@ function renderFeedArticles() {
     d.onclick   = () => openArticle(a);
     d.innerHTML = `
       <div class="fac-stripe" style="background:${cc.hex}"></div>
-      ${a.image_url ? `<img class="fac-img" src="${a.image_url}" loading="lazy" alt="" onerror="this.style.display='none'">` : `<div class="fac-img" style="background:${cc.bg}"></div>`}
+      ${a.image_url ? `<img class="fac-img" src="${a.image_url}" loading="lazy" alt="" onerror="this.style.background=CAT_GRADIENTS[this.closest('[data-cat]')?.dataset?.cat||'tech']||'var(--bg3)';this.style.display='none'">` : `<div class="fac-img" style="background:${cc.bg}"></div>`}
       <div class="fac-info">
         <div class="fac-cat" style="color:${cc.hex}">${cc.icon} ${cc.short}</div>
         <div class="fac-title">${a.title}</div>
@@ -3030,7 +3176,6 @@ function navTo(name) {
   hBrand.style.display='flex'; hPage.style.display='none'; hSearch.style.display='none';
 
   if (name==='explore') {
-    if (!marketDataLoaded) loadLiveMarkets();
     hBrand.style.display='none'; hPage.style.display='block'; hPage.textContent='Explore';
     hSearch.style.display='flex'; langBtn.style.display='none';
   } else if (name==='feed') {
@@ -3056,158 +3201,24 @@ function navTo(name) {
   }
 }
 
-
-// ── LIVE MARKET DATA ────────────────────────────────────────────────────────
-let marketDataLoaded = false;
-
-async function loadLiveMarkets() {
-  try {
-    const data = await api('/markets');
-
-    // ── Ticker bar ──────────────────────────────────────────────────────────
-    const stocks      = data.stocks     || {};
-    const commodities = data.commodities|| {};
-    const crypto      = data.crypto     || {};
-
-    const nifty  = stocks.nifty  || {};
-    const sensex = stocks.sensex || {};
-    const nasdaq = stocks.nasdaq || {};
-    const gold   = commodities.gold  || {};
-    const silver = commodities.silver|| {};
-    const oil    = commodities.oil   || {};
-    const usdinr = stocks.usdinr || {};
-    const btc    = crypto.bitcoin || {};
-
-    function fmt(n, dec=2) { return n ? Number(n).toLocaleString('en-IN', {maximumFractionDigits:dec}) : '--'; }
-    function arrow(n) { return (n >= 0) ? `▲ +${Math.abs(n).toFixed(2)}%` : `▼ −${Math.abs(n).toFixed(2)}%`; }
-    function arrowColor(n) { return n >= 0 ? '#43A047' : '#E53935'; }
-
-    // Build ticker items
-    const tickerItems = [
-      { label:'NIFTY',   color:'#43A047', val:fmt(nifty.price,0),   chg:nifty.change_pct  },
-      { label:'SENSEX',  color:'#1E88E5', val:fmt(sensex.price,0),  chg:sensex.change_pct },
-      { label:'NASDAQ',  color:'#8E24AA', val:fmt(nasdaq.price,0),  chg:nasdaq.change_pct },
-      { label:'GOLD',    color:'#FBC02D', val:'$'+fmt(gold.price),  chg:gold.change_pct   },
-      { label:'SILVER',  color:'#e0e0e0', val:'$'+fmt(silver.price),chg:silver.change_pct },
-      { label:'OIL',     color:'#FB8C00', val:'$'+fmt(oil.price)+'/bbl', chg:oil.change_pct },
-      { label:'USD/INR', color:'#FF8C42', val:'₹'+fmt(usdinr.price,2), chg:usdinr.change_pct },
-      { label:'BTC',     color:'#FBC02D', val:'$'+fmt(btc.usd,0),  chg:btc.change_24h    },
-    ];
-
-    // Render ticker (doubled for seamless scroll)
-    const tickerHtml = [...tickerItems, ...tickerItems].map(t => {
-      const c = arrowColor(t.chg || 0);
-      return `<span class="tick-item">
-        <span style="color:${t.color}">${t.label}</span>
-        ${t.val}
-        <span style="color:${c};font-size:0.6rem">${arrow(t.chg||0)}</span>
-      </span>`;
-    }).join('');
-
-    const ti = document.getElementById('ticker-inner');
-    if (ti) ti.innerHTML = tickerHtml;
-
-    // ── Bento: Markets card ─────────────────────────────────────────────────
-    const setEl = (id, text, color) => {
-      const el = document.getElementById(id);
-      if (el) { el.textContent = text; if (color) el.style.color = color; }
-    };
-
-    setEl('bm-nifty-val',  '₹' + fmt(nifty.price,0),  arrowColor(nifty.change_pct));
-    setEl('bm-nifty-chg',  arrow(nifty.change_pct),    arrowColor(nifty.change_pct));
-    setEl('bm-sensex-val', '₹' + fmt(sensex.price,0),  arrowColor(sensex.change_pct));
-    setEl('bm-sensex-chg', arrow(sensex.change_pct),   arrowColor(sensex.change_pct));
-
-    // ── Bento: Commodities card ─────────────────────────────────────────────
-    setEl('bm-gold-val',  '$' + fmt(gold.price),   '#FBC02D');
-    setEl('bm-gold-chg',  arrow(gold.change_pct),  arrowColor(gold.change_pct));
-    setEl('bm-oil-val',   '$' + fmt(oil.price)+'/bbl', '#FB8C00');
-    setEl('bm-oil-chg',   arrow(oil.change_pct),   arrowColor(oil.change_pct));
-
-    // ── Bento: Weather card ─────────────────────────────────────────────────
-    const weather = data.weather || {};
-    const cities  = Object.keys(weather);
-    if (cities.length > 0) {
-      const city = cities[0];
-      const w    = weather[city];
-      const loc  = document.getElementById('bw-loc');
-      const tmp  = document.getElementById('bw-temp');
-      const dsc  = document.getElementById('bw-desc');
-      const ico  = document.getElementById('bw-icon');
-      if (loc) loc.innerHTML = `<i class="fa-solid fa-location-dot" style="font-size:0.6rem"></i> ${city}`;
-      if (tmp) tmp.textContent = w.temp + '°';
-      if (dsc) dsc.textContent = `${w.description} · Feels ${w.feels_like}°`;
-      const iconMap = {'01d':'☀️','02d':'⛅','03d':'☁️','04d':'☁️','09d':'🌧️',
-                       '10d':'🌦️','11d':'⛈️','13d':'❄️','50d':'🌫️',
-                       '01n':'🌙','02n':'⛅','03n':'☁️','04n':'☁️'};
-      if (ico) ico.textContent = iconMap[w.icon] || '🌤';
-    }
-
-    marketDataLoaded = true;
-    log.debug && log.debug('Markets loaded');
-  } catch(e) {
-    console.warn('Market data load failed:', e.message);
-    // Keep showing last values or show offline message
-    const ti = document.getElementById('ticker-inner');
-    if (ti && ti.textContent.includes('Loading')) {
-      ti.innerHTML = '<span class="tick-item" style="color:var(--t3)">⚠️ Market data unavailable — check backend</span>';
-    }
-  }
-}
-
-// ── AVATAR HELPER ────────────────────────────────────────────────────────────
-function setAllAvatars(url) {
-  if (!url) return;
-  ['sb-ava-img','prof-ava-img','epm-ava','h-avatar-img'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.src = url;
-  });
-  // Also update header avatar
-  const ha = document.querySelector('.h-avatar img');
-  if (ha) ha.src = url;
-}
-
-// ── ENHANCED loadProfileFromAPI ──────────────────────────────────────────────
 async function loadProfileFromAPI() {
   try {
     const me = await api('/me');
-
-    // Name
-    ['prof-name','sb-name'].forEach(id => {
-      const el = document.getElementById(id); if (el && me.display_name) el.textContent = me.display_name;
-    });
-    const nameEl = document.querySelector('.prof-name');
-    if (nameEl && me.display_name) nameEl.textContent = me.display_name;
-
-    // Handle
-    const handle = document.querySelector('.prof-handle');
-    if (handle) handle.textContent = '@' + (me.email||'').split('@')[0] + ' ✦';
-    const sbHandle = document.querySelector('.sb-handle');
-    if (sbHandle) sbHandle.textContent = '@' + (me.email||'').split('@')[0];
-
-    // Bio
-    const bio = document.querySelector('.prof-bio');
-    if (bio && me.bio) bio.textContent = me.bio;
-
-    // Avatar
-    if (me.avatar_url) setAllAvatars(me.avatar_url);
-
-    // Stats from /me/stats
-    try {
-      const stats = await api('/me/stats');
-      const setTxt = (id, v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
-      setTxt('saved-ct',      stats.saved_count || 0);
-      setTxt('prof-articles', stats.articles_read || 0);
-      setTxt('prof-time',     stats.time_spent_minutes + ' min');
-      setTxt('prof-streak',   stats.streak_days + ' days');
-    } catch(e) { /* stats optional */ }
-
+    if (me.display_name) {
+      document.getElementById('prof-name').textContent = me.display_name;
+      document.getElementById('sb-name').textContent = me.display_name;
+    }
+    if (me.email) {
+      const handle = '@' + me.email.split('@')[0] + ' ✦';
+      document.getElementById('prof-handle').textContent = handle;
+      document.getElementById('sb-handle').textContent = handle;
+    }
+    if (me.bio) document.getElementById('prof-bio').textContent = me.bio;
     ST.interests = me.interests || {};
     persist();
-  } catch(e) {
-    console.warn('Profile load failed:', e.message);
-  }
+  } catch(e) {}
 }
+
 // ── TIME AGO ──
 function timeAgo(dateStr) {
   if (!dateStr) return '';
@@ -3271,9 +3282,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('saved-ct').textContent = ST.saves.length;
 
   // Load live feed
-  loadFeed(true);
-  loadLiveMarkets();
-  setInterval(loadLiveMarkets, 5 * 60 * 1000); // refresh every 5 min.then(() => {
+  loadFeed(true).then(() => {
     // After feed loads, populate explore hero and grid
     if (homeArticles.length) {
       renderExpHeroWithArticles(homeArticles);
